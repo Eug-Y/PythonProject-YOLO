@@ -1,0 +1,49 @@
+{
+  "version": "locked_yolo11_yolov8_mask_fusion_v27",
+  "created_at": "2026-08-19T11:34:39+08:00",
+  "calibrated_on": "valid_full_resolution_three_seed",
+  "held_out_test_used": false,
+  "release_blind_holdout_used": false,
+  "primary_model": "yolo11_primary",
+  "auxiliary_model": "yolov8_auxiliary",
+  "role": "strict_yolo11_primary",
+  "model_weights": [
+    1.0,
+    1.0
+  ],
+  "match_iou": 0.4,
+  "mask_vote": 0.5,
+  "score_threshold": 0.2,
+  "min_models": 1,
+  "required_model_indices": [
+    0
+  ],
+  "unconfirmed_score_threshold": 0.225,
+  "aggregate_gate": {
+    "metrics": {
+      "mean_f1_delta_vs_yolo11": 0.006702698946397523,
+      "mean_f1_delta_vs_yolov8": 0.0030980756715319377,
+      "mean_precision_delta_vs_better": 0.005454245047091688,
+      "mean_recall_delta_vs_better": -0.007701149425287397,
+      "mean_iou_delta_vs_better": -0.0021754610319246006,
+      "worst_f1_delta_vs_yolo11": 0.003811690198946116,
+      "worst_f1_delta_vs_yolov8": -0.0013496042632359373,
+      "worst_precision_delta_vs_better": -0.0023750720592250474,
+      "worst_recall_delta_vs_better": -0.020344827586206926,
+      "worst_iou_delta_vs_better": -0.004201291593530332,
+      "positive_f1_vs_yolov8_seeds": 2
+    },
+    "checks": {
+      "mean_f1_vs_yolo11": true,
+      "worst_f1_vs_yolo11": true,
+      "mean_f1_vs_yolov8": true,
+      "worst_f1_vs_yolov8": true,
+      "mean_precision_guard": true,
+      "mean_recall_guard": true,
+      "mean_iou_guard": true,
+      "positive_yolov8_seeds": true
+    },
+    "passed": true
+  },
+  "mean_fusion_f1": 0.6468719223590101
+}

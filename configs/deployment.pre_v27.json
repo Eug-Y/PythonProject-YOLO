@@ -1,0 +1,18 @@
+{
+  "version": "deployment_config_v1",
+  "state": "active",
+  "model_name": "exp_ca_5ch_grouped_reviewed_v1",
+  "checkpoint": "runs/segment/land_seg/exp_ca_5ch_grouped_reviewed_v1/weights/best.pt",
+  "sha256": "589a1d5600e58b1b5932a472137bddc057821daac4c8a5f98bb1e3a94715649b",
+  "confidence": 0.25,
+  "imgsz": 1024,
+  "channels": [
+    "R",
+    "G",
+    "B",
+    "NDVI",
+    "NDRE"
+  ],
+  "release_version": "incumbent_pre_v20",
+  "rollback_model": null
+}

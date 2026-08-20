@@ -1,0 +1,8 @@
+# data_v22_sparse_context_dense_replay_train_v1; train-only replay, held-out test is not exposed.
+path: D:/PythonProject-YOLO/datasets/Data_v22_sparse_context_dense_replay_train
+train: train/images
+val: D:/PythonProject-YOLO/datasets/Data_v3/valid/images
+
+nc: 1
+names: ['land']
+channels: 5

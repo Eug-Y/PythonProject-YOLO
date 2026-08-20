@@ -1,0 +1,8 @@
+# Train/valid-only contract for Data_v8 fusion groups C0/C1/F1/F2.
+path: D:/PythonProject-YOLO/datasets/Data_v6_teacher_refined_yolo11_final_reviewed
+train: train/images
+val: D:/PythonProject-YOLO/datasets/Data_v3/valid/images
+
+nc: 1
+names: ['land']
+channels: 5

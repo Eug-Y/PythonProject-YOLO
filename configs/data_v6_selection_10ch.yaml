@@ -1,0 +1,9 @@
+# Train/valid-only contract for Data_v6 terrain-factor screening.
+path: D:/PythonProject-YOLO/datasets/Data_v3
+train: train/images
+val: valid/images
+
+nc: 1
+names: ['land']
+channels: 10
+

@@ -1,0 +1,34 @@
+{
+  "version": "project_yolo_segmentation_compatibility_v1",
+  "environment": {
+    "ultralytics": "8.4.51",
+    "gpu_memory_gb": 6,
+    "task": "single-class instance segmentation",
+    "input_contract": "R,G,B prefix followed by optional spectral/terrain channels"
+  },
+  "models": {
+    "yolo11n-seg.pt": {"status": "recommended_control", "default_batch_640": 4, "ca_eca": true},
+    "yolo11s-seg.pt": {"status": "recommended_capacity_check", "default_batch_640": 1, "ca_eca": true},
+    "yolov8n-seg.pt": {"status": "recommended_diverse_ensemble_member", "default_batch_640": 4, "ca_eca": true},
+    "yolov8s-seg.pt": {"status": "optional", "default_batch_640": 1, "ca_eca": true},
+    "yolo12n-seg.pt": {"status": "recommended_modern_candidate", "default_batch_640": 4, "ca_eca": true},
+    "yolo12s-seg.pt": {"status": "optional", "default_batch_640": 1, "ca_eca": true},
+    "yolo26n-seg.pt": {"status": "recommended_modern_candidate", "default_batch_640": 4, "ca_eca": true},
+    "yolo26s-seg.pt": {"status": "optional", "default_batch_640": 1, "ca_eca": true},
+    "yolov9c-seg.pt": {"status": "research_only_large", "default_batch_640": 1, "ca_eca": false}
+  },
+  "excluded": {
+    "YOLOv10": "The installed model family has no native segmentation YAML.",
+    "YOLOv5/YOLOv7": "Would require a separate legacy training stack and provide little value for this multichannel pipeline.",
+    "YOLOE": "Open-vocabulary segmentation is unnecessary for the fixed single land class.",
+    "YOLOv9e": "Too large for the current 6 GB GPU and not needed before v9c proves useful."
+  },
+  "fusion_policy": {
+    "method": "late instance-mask fusion",
+    "implementation": "yolo_mask_ensemble.py",
+    "no_weight_averaging": true,
+    "require_individual_validation_first": true,
+    "selection_splits": ["train", "valid"],
+    "held_out_test_locked": true
+  }
+}

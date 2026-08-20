@@ -1,0 +1,76 @@
+{
+  "version": "v27_release_blind_final_summary_v1",
+  "created_at": "2026-08-20T20:25:22+08:00",
+  "protocol": {
+    "version": "v27_release_blind_final_protocol_v1",
+    "preregistered_at": "2026-08-19T11:50:28+08:00",
+    "candidate": "v27_yolo11_primary_fusion_v1",
+    "primary_architecture": "YOLO11n-seg",
+    "auxiliary_architecture": "YOLOv8n-seg",
+    "primary_sha256": "eea619abdc0ba0e71404942895c15b045d0d63bf6fbc9ad999a4874c35061181",
+    "auxiliary_sha256": "589a1d5600e58b1b5932a472137bddc057821daac4c8a5f98bb1e3a94715649b",
+    "fusion_config_sha256": "b90d85b26a708b70ea927ce9c60a71682474ffc1f919c7a069779d66a4e0b9e3",
+    "selection_manifest_sha256": "630bca1fe5e3f2e815ac712ad2a1360bb39f10a3d14e31ab68373e0de09976fc",
+    "images": 30,
+    "ground_truth_requirement": "sealed manual RGB-only labels; no pseudo labels",
+    "evaluation_limit": 1,
+    "gate": {
+      "fusion_f1_delta_vs_incumbent_min": 0.0,
+      "precision_delta_vs_incumbent_min": -0.01,
+      "recall_delta_vs_incumbent_min": -0.01,
+      "mean_matched_iou_delta_vs_incumbent_min": -0.01
+    },
+    "every_output_requires_yolo11": true,
+    "configuration_search_allowed": false,
+    "result_may_not_be_used_for_further_tuning": true
+  },
+  "annotation_seal_sha256": "923c771d95bb378ea245a9840c3d8d5a216e725b1ac2b90a8296bf23d51f1565",
+  "evaluation_count": 1,
+  "images": 30,
+  "metrics": {
+    "fusion": {
+      "tp": 712,
+      "fp": 942,
+      "fn": 330,
+      "precision": 0.43047158403869407,
+      "recall": 0.6833013435700576,
+      "f1": 0.5281899109792285,
+      "mean_matched_iou": 0.7659417011154721
+    },
+    "primary_yolo11": {
+      "tp": 719,
+      "fp": 984,
+      "fn": 323,
+      "precision": 0.4221961244862008,
+      "recall": 0.6900191938579654,
+      "f1": 0.5238615664845173,
+      "mean_matched_iou": 0.7623541690076525
+    },
+    "incumbent_yolov8": {
+      "tp": 664,
+      "fp": 954,
+      "fn": 378,
+      "precision": 0.4103831891223733,
+      "recall": 0.6372360844529751,
+      "f1": 0.4992481203007519,
+      "mean_matched_iou": 0.7709532958251137
+    }
+  },
+  "values": {
+    "fusion_f1_delta_vs_incumbent": 0.02894179067847663,
+    "precision_delta_vs_incumbent": 0.02008839491632075,
+    "recall_delta_vs_incumbent": 0.04606525911708248,
+    "mean_matched_iou_delta_vs_incumbent": -0.005011594709641631
+  },
+  "checks": {
+    "f1_not_below_incumbent": true,
+    "precision_guard": true,
+    "recall_guard": true,
+    "matched_iou_guard": true,
+    "yolo11_ownership": true
+  },
+  "gate_passed": true,
+  "decision": "promote_v27_to_production",
+  "production_switch_allowed": true,
+  "result_may_not_be_used_for_further_tuning": true
+}

@@ -1,0 +1,69 @@
+{
+  "version": "data_v10_grouped_feature_cv_contract_v1",
+  "created_at": "2026-08-17T20:21:01+08:00",
+  "source_contract": "D:\\PythonProject-YOLO\\configs\\generated\\data_v9_grouped_cv\\contract.json",
+  "source_splits": [
+    "train",
+    "valid"
+  ],
+  "held_out_split": "test",
+  "held_out_test_used": false,
+  "test_paths_enumerated": false,
+  "training_label_policy": "h0_teacher_refined_mixed",
+  "validation_label_policy": "human_only",
+  "feature_pairing": {
+    "checked_arrays": 270,
+    "shared_channels": [
+      "R",
+      "G",
+      "B",
+      "NDVI",
+      "NDRE"
+    ],
+    "base_channel_indices": [
+      0,
+      1,
+      2,
+      5,
+      6
+    ],
+    "candidate_channel_indices": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "exact_array_match": true,
+    "shared_values_sha256": "2dfe95616414fe4dd29667de5d811a0b882e59f2dd9cb7535640639c3d08597d"
+  },
+  "fold_contracts": [
+    {
+      "fold": 0,
+      "train_images": 180,
+      "validation_images": 90,
+      "train_list": "D:\\PythonProject-YOLO\\configs\\generated\\data_v9_grouped_cv\\fold0\\train.txt",
+      "validation_list": "D:\\PythonProject-YOLO\\configs\\generated\\data_v9_grouped_cv\\fold0\\val.txt",
+      "data_6ch": "D:\\PythonProject-YOLO\\configs\\generated\\data_v10_grouped_feature_cv\\fold0\\data_6ch.yaml",
+      "data_7ch": "D:\\PythonProject-YOLO\\configs\\generated\\data_v10_grouped_feature_cv\\fold0\\data_7ch.yaml"
+    },
+    {
+      "fold": 1,
+      "train_images": 183,
+      "validation_images": 87,
+      "train_list": "D:\\PythonProject-YOLO\\configs\\generated\\data_v9_grouped_cv\\fold1\\train.txt",
+      "validation_list": "D:\\PythonProject-YOLO\\configs\\generated\\data_v9_grouped_cv\\fold1\\val.txt",
+      "data_6ch": "D:\\PythonProject-YOLO\\configs\\generated\\data_v10_grouped_feature_cv\\fold1\\data_6ch.yaml",
+      "data_7ch": "D:\\PythonProject-YOLO\\configs\\generated\\data_v10_grouped_feature_cv\\fold1\\data_7ch.yaml"
+    },
+    {
+      "fold": 2,
+      "train_images": 177,
+      "validation_images": 93,
+      "train_list": "D:\\PythonProject-YOLO\\configs\\generated\\data_v9_grouped_cv\\fold2\\train.txt",
+      "validation_list": "D:\\PythonProject-YOLO\\configs\\generated\\data_v9_grouped_cv\\fold2\\val.txt",
+      "data_6ch": "D:\\PythonProject-YOLO\\configs\\generated\\data_v10_grouped_feature_cv\\fold2\\data_6ch.yaml",
+      "data_7ch": "D:\\PythonProject-YOLO\\configs\\generated\\data_v10_grouped_feature_cv\\fold2\\data_7ch.yaml"
+    }
+  ]
+}

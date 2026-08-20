@@ -1,0 +1,8 @@
+# Data_v20 train-only sparse-context augmentation; held-out test is not exposed.
+path: D:/PythonProject-YOLO/datasets/Data_v20_sparse_context_train
+train: train/images
+val: D:/PythonProject-YOLO/datasets/Data_v3/valid/images
+
+nc: 1
+names: ['land']
+channels: 5

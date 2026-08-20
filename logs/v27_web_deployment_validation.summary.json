@@ -1,0 +1,52 @@
+{
+  "version": "v27_web_deployment_validation_v1",
+  "validated_at": "2026-08-20T21:28:10+08:00",
+  "state": "deployed_and_verified",
+  "service": {
+    "url": "http://127.0.0.1:5055",
+    "server": "waitress",
+    "home_http": 200
+  },
+  "production_model": {
+    "model_name": "v27_yolo11_primary_fusion_v1",
+    "primary": "YOLO11n-seg",
+    "auxiliary": "YOLOv8n-seg",
+    "primary_sha256": "eea619abdc0ba0e71404942895c15b045d0d63bf6fbc9ad999a4874c35061181",
+    "auxiliary_sha256": "589a1d5600e58b1b5932a472137bddc057821daac4c8a5f98bb1e3a94715649b",
+    "fusion_config_sha256": "b90d85b26a708b70ea927ce9c60a71682474ffc1f919c7a069779d66a4e0b9e3",
+    "every_output_requires_yolo11": true
+  },
+  "online_smoke": {
+    "image": "datasets/Data_v3/valid/images/DJI_0010.JPG",
+    "mode": "all",
+    "http": 200,
+    "latency_seconds": 11.33,
+    "yolo_detections": 50,
+    "weed_candidate_count": 22,
+    "layers": [
+      "index_evi2",
+      "index_gndvi",
+      "ndvi",
+      "original",
+      "soil_proxy",
+      "thermal",
+      "vegetation",
+      "weed_candidates",
+      "yolo"
+    ]
+  },
+  "rollback": {
+    "config": "configs/deployment.pre_v27.json",
+    "checkpoint_exists": true,
+    "sha256_matches": true
+  },
+  "tests": {
+    "python_compile": "passed",
+    "weed_candidate_unit_tests": "3/3 passed",
+    "web_spectral_tests": "6/6 passed",
+    "v27_deployment_tests": "5/5 passed",
+    "javascript_syntax": "passed",
+    "visual_screenshot": "reports/v27_deployed_web_home.png"
+  },
+  "safety": "Weed detections are review candidates only and must not be used directly as a spraying prescription."
+}

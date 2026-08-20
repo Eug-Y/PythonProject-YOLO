@@ -1,0 +1,8 @@
+# Locked train/valid-only contract for Data_v5 paired-feature ablations.
+path: D:/PythonProject-YOLO/datasets/Data_v3
+train: train/images
+val: valid/images
+
+nc: 1
+names: ['land']
+channels: 5

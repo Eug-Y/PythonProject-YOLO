@@ -1,0 +1,8 @@
+# Train/valid-only contract for the Data_v7 soil/vegetation screen.
+path: D:/PythonProject-YOLO/datasets/Data_v6_teacher_refined_yolo11_final_reviewed
+train: train/images
+val: D:/PythonProject-YOLO/datasets/Data_v3/valid/images
+
+nc: 1
+names: ['land']
+channels: 6

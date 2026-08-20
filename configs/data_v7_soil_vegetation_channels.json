@@ -1,0 +1,47 @@
+{
+  "version": "data_v7_soil_vegetation_candidates_v1",
+  "sensor": "DJI P4 Multispectral FC6360",
+  "storage": {
+    "dtype": "uint8",
+    "range": [0, 255],
+    "decode": "float32(value) / 255.0"
+  },
+  "source_bands": ["Blue", "Green", "Red", "RedEdge", "NIR"],
+  "channels": [
+    "R",
+    "G",
+    "B",
+    "NDVI",
+    "NDRE",
+    "RE_BSI_PROXY",
+    "MCARI"
+  ],
+  "selection_split": ["train", "valid"],
+  "held_out_split": "test",
+  "feature_policy": {
+    "objective": "Measure the incremental value of a soil proxy and a vegetation/chlorophyll index on top of the locked RGB+NDVI+NDRE baseline.",
+    "soil_candidate": {
+      "name": "RE_BSI_PROXY",
+      "label": "RedEdge bare-soil proxy",
+      "standard_bsi": false,
+      "reason": "DJI P4M has no SWIR band, so standard SWIR-based BSI cannot be computed. This red-edge proxy must not be reported as standard BSI."
+    },
+    "vegetation_candidate": {
+      "name": "MCARI",
+      "label": "P4M-adapted MCARI",
+      "reason": "Adds RedEdge/Red/Green chlorophyll contrast and previously showed useful validation signal; its P4M band mapping still requires empirical validation."
+    },
+    "terrain_channels_included": false,
+    "slope_included": false,
+    "screening_order": ["add_re_bsi_proxy_6ch", "add_mcari_6ch", "soil_vegetation_7ch"],
+    "promotion_rule": "Seed-0 Mask mAP50-95 must improve by at least 0.003 over the locked five-channel seed-0 validation baseline before three-seed confirmation.",
+    "test_policy": "Generate and use train/valid features only. Keep test sealed until a single final candidate is frozen.",
+    "deployment_model_unchanged": true
+  },
+  "notes": [
+    "All layouts begin with R,G,B and retain NDVI,NDRE from the current five-channel model.",
+    "RE_BSI_PROXY is experimental and non-standard because no SWIR band is available.",
+    "MCARI is adapted to DJI P4M bands and is treated as a candidate, not a guaranteed improvement.",
+    "No slope, aspect, elevation, DEM, DSM, DTM or other terrain feature is included in this round."
+  ]
+}

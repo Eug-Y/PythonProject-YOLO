@@ -1,0 +1,37 @@
+{
+  "version": "data_v8_multispectral_fusion_groups_v1",
+  "selection_splits": ["train", "valid"],
+  "held_out_split": "test",
+  "groups": {
+    "c0_current_indices_early": {
+      "channels": ["R", "G", "B", "NDVI", "NDRE"],
+      "fusion": "none",
+      "role": "current_5ch_control"
+    },
+    "c1_raw_bands_early": {
+      "channels": ["R", "G", "B", "NIR", "RedEdge"],
+      "fusion": "none",
+      "role": "raw_5band_control"
+    },
+    "f1_p4_concat": {
+      "channels": ["R", "G", "B", "NIR", "RedEdge"],
+      "fusion": "f1_p4_concat",
+      "role": "minimal_dual_branch"
+    },
+    "f2_multiscale_gated": {
+      "channels": ["R", "G", "B", "NIR", "RedEdge"],
+      "fusion": "f2_multiscale_gated",
+      "role": "primary_multiscale_candidate"
+    },
+    "f3_index_guided_gated": {
+      "channels": ["R", "G", "B", "NIR", "RedEdge", "NDVI", "NDRE"],
+      "fusion": "f3_index_guided_gated",
+      "role": "conditional_index_guided_candidate"
+    }
+  },
+  "notes": [
+    "F3 is conditional and must not run unless F2 passes its pre-gate.",
+    "YOLOv8 is used for structure screening only; it is not an inference ensemble with YOLO11.",
+    "No group reads or materializes the frozen test split."
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "version": "data_v8_yolo11_early_fusion_groups_v1",
+  "selection_splits": ["train", "valid"],
+  "held_out_split": "test",
+  "groups": {
+    "c0_current_indices_early": ["R", "G", "B", "NDVI", "NDRE"],
+    "c1_raw_bands_early": ["R", "G", "B", "NIR", "RedEdge"]
+  },
+  "notes": [
+    "C0 and C1 use identical per-seed initialization and training budgets.",
+    "YOLO11n-seg uses 3x CoordAtt + 3x ECA in the target validation stage.",
+    "The held-out test split remains sealed."
+  ]
+}

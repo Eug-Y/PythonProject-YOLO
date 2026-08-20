@@ -1,0 +1,6 @@
+train: D:/PythonProject-YOLO/configs/generated/data_v9_grouped_cv/fold1/train.txt
+val: D:/PythonProject-YOLO/configs/generated/data_v9_grouped_cv/fold1/val.txt
+
+nc: 1
+names: ['land']
+channels: 6

@@ -1,0 +1,36 @@
+{
+  "version": "data_v4_candidates_v1",
+  "sensor": "DJI P4 Multispectral FC6360",
+  "storage": {
+    "dtype": "uint8",
+    "range": [0, 255],
+    "decode": "float32(value) / 255.0"
+  },
+  "source_bands": ["Blue", "Green", "Red", "RedEdge", "NIR"],
+  "channels": [
+    "R",
+    "G",
+    "B",
+    "NIR",
+    "RedEdge",
+    "NDVI",
+    "NDRE",
+    "GNDVI",
+    "SAVI",
+    "OSAVI",
+    "MSAVI2",
+    "EVI2",
+    "RECI",
+    "BI",
+    "SCI",
+    "ExG",
+    "RE_BSI_PROXY"
+  ],
+  "selection_split": ["train", "valid"],
+  "held_out_split": "test",
+  "notes": [
+    "Standard BSI and NDTI are unavailable because this sensor has no SWIR band.",
+    "RE_BSI_PROXY is experimental and must never be described as standard BSI.",
+    "Candidate channels are screened before formal YOLO training."
+  ]
+}

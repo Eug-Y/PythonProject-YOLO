@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>农智眼</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --green:#2ecc71; --green2:#27ae60; --dark1:#0f1a0f; --dark2:#162316;
+  --card:#1a2d1a; --border:#243824; --text:#b8c8b8; --muted:#5a6b5a;
+  --radius:14px; --radius-sm:10px;
+}
+body {
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  background:var(--dark1); color:var(--text); min-height:100vh; min-height:100dvh;
+  display:flex; flex-direction:column; max-width:1100px; margin:0 auto;
+  -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none;
+  overflow-x:hidden;
+}
+
+/* status bar */
+.status-bar { padding:12px 20px 6px; display:flex; justify-content:space-between; align-items:center; }
+.status-bar .logo { display:flex; align-items:center; gap:8px; }
+.status-bar .logo .icon { width:32px; height:32px; background:linear-gradient(135deg,var(--green),var(--green2)); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px; }
+.status-bar .logo .name { font-size:17px; font-weight:700; color:#fff; letter-spacing:.5px; }
+.status-bar .badge { font-size:10px; background:rgba(46,204,113,.15); color:var(--green); padding:3px 10px; border-radius:20px; }
+
+/* main scroll */
+.main { flex:1; overflow-y:auto; padding:0 16px 100px; -webkit-overflow-scrolling:touch; }
+
+/* hero */
+.hero { text-align:center; padding:24px 0 20px; }
+.hero .drone { font-size:52px; margin-bottom:6px; animation:float 3s ease-in-out infinite; }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+.hero h2 { font-size:15px; color:var(--muted); font-weight:400; }
+
+/* project status */
+.project-status { background:linear-gradient(135deg,rgba(46,204,113,.10),rgba(26,45,26,.92)); border:1px solid rgba(46,204,113,.28); border-radius:var(--radius); padding:14px; margin-bottom:16px; }
+.project-status .ps-head { display:flex; justify-content:space-between; gap:12px; align-items:center; margin-bottom:9px; }
+.project-status .ps-title { color:#fff; font-size:13px; font-weight:700; }
+.project-status .ps-state { color:var(--green); font-size:10px; border:1px solid rgba(46,204,113,.35); border-radius:10px; padding:2px 8px; }
+.project-status .ps-model { font-size:11px; line-height:1.7; color:var(--text); word-break:break-all; }
+.project-status .ps-decision { margin-top:8px; padding:8px 10px; background:#0d180d; border-radius:8px; font-size:11px; color:#d7e4d7; }
+.project-status .ps-warning { margin-top:8px; font-size:10px; color:#f4bd64; line-height:1.5; }
+.report-links { display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
+.report-links a { color:var(--green); text-decoration:none; font-size:10px; padding:4px 8px; border:1px solid var(--border); border-radius:8px; background:#0d180d; }
+
+/* upload card */
+.upload-card {
+  background:var(--card); border:2px dashed var(--border); border-radius:var(--radius);
+  padding:28px 20px; text-align:center; cursor:pointer; transition:all .25s;
+  margin-bottom:16px; position:relative;
+}
+.upload-card:active, .upload-card.drag { border-color:var(--green); background:rgba(46,204,113,.04); transform:scale(.98); }
+.upload-card.has { border-style:solid; border-color:var(--green); }
+.upload-card .up-icon { font-size:36px; margin-bottom:8px; }
+.upload-card .up-title { font-size:14px; color:#fff; font-weight:600; margin-bottom:2px; }
+.upload-card .up-hint { font-size:11px; color:var(--muted); }
+.upload-card .up-count { display:none; margin-top:8px; font-size:13px; color:var(--green); font-weight:600; }
+.upload-card.has .up-count { display:block; }
+.upload-card.has .up-hint { display:none; }
+.upload-card input { display:none; }
+.file-list { margin-top:8px; font-size:10px; color:var(--muted); max-height:48px; overflow-y:auto; line-height:1.6; }
+
+/* section */
+.section { margin-bottom:16px; }
+.section-title { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; padding-left:2px; }
+
+/* chip row */
+.chip-row { display:flex; gap:8px; flex-wrap:wrap; }
+.chip {
+  padding:9px 16px; border-radius:20px; border:1px solid var(--border); background:var(--card);
+  color:var(--text); font-size:13px; cursor:pointer; transition:all .2s; white-space:nowrap;
+}
+.chip.on { background:var(--green); color:#000; border-color:var(--green); font-weight:600; }
+.chip:active { transform:scale(.95); }
+
+/* form row */
+.form-row { display:flex; gap:10px; align-items:center; margin-top:10px; }
+.form-row label { font-size:11px; color:var(--muted); min-width:60px; }
+.form-row input[type=range] { flex:1; -webkit-appearance:none; height:5px; border-radius:3px; background:var(--border); outline:none; }
+.form-row input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:22px; height:22px; border-radius:50%; background:var(--green); cursor:pointer; }
+.form-row .val { font-size:13px; color:var(--green); font-weight:700; min-width:32px; text-align:right; }
+.form-row select, .form-row input[type=number] {
+  background:var(--card); border:1px solid var(--border); border-radius:8px; color:var(--text);
+  padding:8px 10px; font-size:13px; outline:none; max-width:140px;
+}
+#ymodel { flex:1; max-width:none; min-width:0; }
+
+/* big action btn */
+.action-btn {
+  width:100%; padding:14px; border:none; border-radius:var(--radius); font-size:16px; font-weight:700;
+  background:linear-gradient(135deg,var(--green),var(--green2)); color:#000;
+  cursor:pointer; transition:all .2s; margin-top:6px; letter-spacing:1px;
+  box-shadow:0 4px 20px rgba(46,204,113,.25);
+}
+.action-btn:active { transform:scale(.97); }
+.action-btn:disabled { opacity:.35; transform:none; box-shadow:none; }
+
+/* secondary btn */
+.sec-btn {
+  width:100%; padding:12px; border:1px solid var(--border); border-radius:var(--radius);
+  background:transparent; color:var(--text); font-size:13px; font-weight:600;
+  cursor:pointer; margin-top:6px; transition:all .2s;
+}
+.sec-btn:active { border-color:var(--green); color:var(--green); }
+.sec-btn:disabled { opacity:.3; }
+
+/* result card */
+.result-card { background:var(--card); border-radius:var(--radius); overflow:hidden; margin-bottom:14px; border:1px solid var(--border); }
+.result-card .rc-head { padding:12px 14px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); }
+.result-card .rc-head .fn { font-size:13px; font-weight:600; color:#fff; }
+.result-card .rc-head .dl { font-size:11px; color:var(--green); cursor:pointer; padding:4px 10px; border:1px solid var(--border); border-radius:6px; }
+.result-card .img-wrap { position:relative; overflow:hidden; }
+.result-card .img-wrap img { width:100%; display:block; cursor:pointer; }
+.result-card .img-tabs { display:flex; gap:4px; padding:8px 10px; overflow-x:auto; background:#0d180d; }
+.result-card .img-tabs button {
+  padding:5px 12px; border-radius:14px; border:1px solid var(--border); background:transparent;
+  color:var(--muted); font-size:11px; cursor:pointer; white-space:nowrap; transition:all .15s;
+}
+.result-card .img-tabs button.on { background:var(--green); color:#000; border-color:var(--green); font-weight:600; }
+
+.result-card .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; padding:10px 12px; }
+.result-card .stat { text-align:center; padding:8px 4px; background:#0d180d; border-radius:8px; }
+.result-card .stat .sv { font-size:15px; font-weight:700; color:var(--green); }
+.result-card .stat .sl { font-size:10px; color:var(--muted); margin-top:1px; }
+
+/* spinner */
+.spin-wrap { display:none; flex-direction:column; align-items:center; padding:40px; }
+.spin-wrap.on { display:flex; }
+.spinner { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--green); border-radius:50%; animation:spin .7s linear infinite; margin-bottom:12px; }
+@keyframes spin { to{transform:rotate(360deg)} }
+.spin-wrap .stxt { font-size:12px; color:var(--muted); }
+
+/* empty */
+.empty { text-align:center; padding:48px 20px; }
+.empty .ei { font-size:48px; margin-bottom:10px; }
+.empty .et { font-size:13px; color:var(--muted); }
+
+/* lightbox */
+.lb { display:none; position:fixed; inset:0; background:rgba(0,0,0,.94); z-index:9999; }
+.lb.on { display:flex; align-items:center; justify-content:center; }
+.lb img { max-width:96vw; max-height:96vh; object-fit:contain; }
+.lb .x { position:absolute; top:14px; right:20px; color:#fff; font-size:28px; cursor:pointer; padding:8px; }
+
+/* compare slider */
+.cmp-wrap { position:relative; overflow:hidden; cursor:ew-resize; }
+.cmp-wrap img { width:100%; display:block; }
+.cmp-wrap .top-img { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; clip-path:inset(0 50% 0 0); }
+.cmp-wrap .divider { position:absolute; top:0; bottom:0; width:3px; background:#fff; left:50%; pointer-events:none; z-index:2; box-shadow:0 0 8px rgba(0,0,0,.5); }
+.cmp-wrap .knob { position:absolute; top:50%; width:28px; height:28px; border-radius:50%; background:#fff; border:2px solid var(--green); transform:translate(-50%,-50%); z-index:3; display:flex; align-items:center; justify-content:center; font-size:10px; }
+
+/* toast */
+.toast { position:fixed; bottom:100px; left:50%; transform:translateX(-50%); background:rgba(46,204,113,.95); color:#000; padding:10px 24px; border-radius:20px; font-size:13px; font-weight:600; z-index:9999; opacity:0; transition:opacity .3s; pointer-events:none; }
+.toast.show { opacity:1; }
+</style>
+</head>
+<body>
+
+<!-- status -->
+<div class="status-bar">
+  <div class="logo">
+    <div class="icon">🌾</div>
+    <div class="name">农智眼</div>
+  </div>
+  <div class="badge">智能体检</div>
+</div>
+
+<div class="main" id="mainView">
+
+  <!-- hero -->
+  <div class="hero">
+    <div class="drone">🛩️</div>
+    <h2>无人机农田智能体检</h2>
+  </div>
+
+  {% if project_status %}
+  <div class="project-status">
+    <div class="ps-head"><div class="ps-title">{{ project_status.status_title }}</div><div class="ps-state">已部署</div></div>
+    <div class="ps-model">当前模型：{{ project_status.deployment_model }}</div>
+    {% if project_status.deployment_primary %}<div class="ps-model">主体：{{ project_status.deployment_primary }}；辅助：{{ project_status.deployment_auxiliary }}</div>{% endif %}
+    {% if project_status.deployment_metric_value is not none %}
+    <div class="ps-model">{{ project_status.deployment_metric_label }}：{{ '%.4f'|format(project_status.deployment_metric_value) }}{% if project_status.deployment_f1_delta is not none %}（较旧 YOLOv8 +{{ '%.4f'|format(project_status.deployment_f1_delta) }}）{% endif %}</div>
+    {% endif %}
+    <div class="ps-decision">{{ project_status.decision_zh }}</div>
+    {% if project_status.candidate_model %}
+    <div class="ps-model">研究候选：{{ project_status.candidate_model }}{% if project_status.candidate_mask_map is not none %}（Mask mAP50-95 {{ '%.4f'|format(project_status.candidate_mask_map) }}）{% endif %}</div>
+    {% endif %}
+    <div class="ps-warning">{{ project_status.research_note }}</div>
+    <div class="ps-warning">{{ project_status.soil_proxy_warning }}</div>
+    <div class="ps-warning">{{ project_status.weed_candidate_warning }}</div>
+    <div class="report-links">
+      {% for report in project_status.reports %}<a href="{{ report.url }}" target="_blank" rel="noopener">{{ report.label }}</a>{% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- upload -->
+  <div class="upload-card" id="uploadCard" onclick="document.getElementById('finp').click()">
+    <div class="up-icon">📁</div>
+    <div class="up-title">点击上传图片</div>
+    <div class="up-hint">支持 DJI JPG，可多选</div>
+    <div class="up-count" id="upCount"></div>
+    <div class="file-list" id="fileList"></div>
+    <input type="file" id="finp" accept=".jpg,.jpeg" multiple>
+  </div>
+
+  <!-- mode -->
+  <div class="section">
+    <div class="section-title">分析类型</div>
+    <div class="chip-row" id="modeChips">
+      <div class="chip on" data-mode="all">全部功能</div>
+      <div class="chip" data-mode="vegetation">农田面积</div>
+      <div class="chip" data-mode="ndvi">NDVI 热力图</div>
+      <div class="chip" data-mode="indices">植被指数</div>
+      <div class="chip" data-mode="soil">土壤代理</div>
+      <div class="chip" data-mode="weed">杂草候选</div>
+      <div class="chip" data-mode="predict">模型推理</div>
+    </div>
+  </div>
+
+  <!-- settings -->
+  <div class="section">
+    <div class="section-title">参数设置</div>
+    <div class="form-row">
+      <label>最小田块</label>
+      <input type="range" id="th" min="0.001" max="0.5" step="0.001" value="0.005">
+      <span class="val" id="tv">0.005</span>
+      <span style="font-size:10px;color:var(--muted);margin-left:4px">亩</span>
+    </div>
+    <div class="form-row">
+      <label>GSD</label>
+      <input type="number" id="gsd" value="0.028" step="0.001" min="0.005" max="0.5" style="max-width:80px">
+      <span style="font-size:11px;color:var(--muted)">m/px</span>
+        <label style="margin-left:12px">模型</label>
+        <select id="ymodel">
+          {% for m in models[:18] %}
+        <option value="{{ m.name }}">{% if m.recommended %}推荐 · {% endif %}{{ m.name }}（{{ m.source }} · {{ m.kind }}）</option>
+          {% endfor %}
+        </select>
+    </div>
+    <div class="form-row">
+      <label>NDVI 阈值</label>
+      <input type="range" id="ndvi_th" min="0" max="255" step="1" value="0">
+      <span class="val" id="ndvi_tv">0</span>
+      <span style="font-size:10px;color:var(--muted);margin-left:4px">0=自动Otsu</span>
+    </div>
+    <div class="form-row">
+      <label>YOLO 置信度</label>
+      <input type="range" id="ycf" min="0.05" max="0.70" step="0.001" value="{{ '%.3f'|format(project_status.deployment_confidence) }}">
+      <span class="val" id="ycv">{{ '%.3f'|format(project_status.deployment_confidence) }}</span>
+      <span style="font-size:10px;color:var(--muted);margin-left:4px">越低检出越多</span>
+    </div>
+  </div>
+
+  <!-- actions -->
+  <button class="action-btn" id="runBtn" disabled onclick="doExtract()">🚀  开始分析</button>
+  <button class="sec-btn" id="csvBtn" disabled onclick="exportCSV()">📊 导出 CSV 报告</button>
+
+  <!-- spinner -->
+  <div class="spin-wrap" id="spinWrap"><div class="spinner"></div><div class="stxt">AI 分析中...</div></div>
+
+  <!-- results -->
+  <div id="results"></div>
+  <div class="empty" id="emptyState"><div class="ei">🌿</div><div class="et">上传图片，开始农田体检</div></div>
+</div>
+
+<!-- lightbox -->
+<div class="lb" id="lb" onclick="closeLB()"><span class="x">&times;</span><img id="lbImg"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+let files=[], csvData=[], currentMode='all';
+
+const $id=id=>document.getElementById(id);
+
+// upload
+const uploadCard=$id('uploadCard'), finp=$id('finp');
+const upCount=$id('upCount'), fileList=$id('fileList'), runBtn=$id('runBtn');
+
+function updateFiles(fl){
+  files=Array.from(fl).filter(f=>/\.jpe?g$/i.test(f.name));
+  uploadCard.classList.toggle('has',files.length>0);
+  upCount.textContent=files.length?`已选 ${files.length} 张`:'';
+  fileList.innerHTML=files.map(f=>`· ${f.name}`).join('<br>');
+  runBtn.disabled=files.length===0;
+}
+finp.addEventListener('change',e=>updateFiles(e.target.files));
+uploadCard.addEventListener('dragover',e=>{e.preventDefault();uploadCard.classList.add('drag')});
+uploadCard.addEventListener('dragleave',()=>uploadCard.classList.remove('drag'));
+uploadCard.addEventListener('drop',e=>{e.preventDefault();uploadCard.classList.remove('drag');updateFiles(e.dataTransfer.files);finp.files=e.dataTransfer.files});
+
+// mode chips
+$id('modeChips').addEventListener('click',e=>{
+  if(!e.target.classList.contains('chip'))return;
+  document.querySelectorAll('#modeChips .chip').forEach(c=>c.classList.remove('on'));
+  e.target.classList.add('on');
+  currentMode=e.target.dataset.mode;
+});
+
+// threshold slider
+$id('th').addEventListener('input',function(){$id('tv').textContent=parseFloat(this.value).toFixed(3)});
+$id('ndvi_th').addEventListener('input',function(){$id('ndvi_tv').textContent=this.value});
+$id('ycf').addEventListener('input',function(){$id('ycv').textContent=parseFloat(this.value).toFixed(2)});
+
+// extract
+async function doExtract(){
+  if(!files.length)return;
+  $id('spinWrap').classList.add('on'); $id('emptyState').style.display='none';
+  runBtn.disabled=true; $id('csvBtn').disabled=true;
+
+  const fd=new FormData();
+  for(const f of files)fd.append('images',f);
+  fd.append('mode',currentMode);
+  fd.append('threshold',$id('th').value);
+  fd.append('ndvi_threshold',$id('ndvi_th').value);
+  fd.append('gsd',$id('gsd').value);
+  fd.append('model',$id('ymodel').value);
+  fd.append('yolo_conf',$id('ycf').value);
+
+  try{
+    const r=await fetch('/api/extract',{method:'POST',body:fd});
+    const d=await r.json();
+    if(d.error){toast(d.error);return}
+    csvData=d.results.filter(x=>x.status==='ok').map(x=>x.results);
+    $id('csvBtn').disabled=csvData.length===0;
+    render(d.results);
+  }catch(e){toast('网络错误: '+e.message)}
+  finally{$id('spinWrap').classList.remove('on');runBtn.disabled=false}
+}
+
+function render(items){
+  const el=$id('results'); el.innerHTML='';
+  items.forEach((item,i)=>{
+    if(item.error){el.innerHTML+=`<div class="result-card"><div class="rc-head"><span class="fn">❌ ${item.error}</span></div></div>`;return}
+    const r=item.results, imgs=item.images;
+    const tabs=[];
+    if(imgs.original)tabs.push(['rgb','原图',imgs.original,true]);
+    if(r.notice)el.innerHTML+=`<div class="result-card" style="border:1px solid #e6a817;background:rgba(230,168,23,.06);margin-bottom:14px"><div class="rc-head"><span class="fn">⚠️ ${r.notice}</span></div></div>`;
+    if(imgs.ndvi)tabs.push(['ndvi','NDVI植被指数',imgs.ndvi,true]);
+    if(imgs.index_ndvi)tabs.push(['index_ndvi','NDVI连续值',imgs.index_ndvi,true]);
+    if(imgs.index_ndre)tabs.push(['index_ndre','NDRE红边指数',imgs.index_ndre,true]);
+    if(imgs.index_gndvi)tabs.push(['index_gndvi','GNDVI绿光指数',imgs.index_gndvi,true]);
+    if(imgs.index_evi2)tabs.push(['index_evi2','EVI2增强指数',imgs.index_evi2,true]);
+    if(imgs.soil_proxy)tabs.push(['soil_proxy','RE-BSI土壤代理',imgs.soil_proxy,true]);
+    if(imgs.weed_candidates)tabs.push(['weed_candidates','杂草候选',imgs.weed_candidates,true]);
+    if(imgs.thermal)tabs.push(['thermal','NIR 近红外',imgs.thermal,true]);
+    if(imgs.vegetation)tabs.push(['veg','农田面积',imgs.vegetation,true]);
+    if(imgs.yolo)tabs.push(['yolo',currentMode==='all'?'农作物提取':'YOLO',imgs.yolo,true]);
+
+    const cid=`c${i}`;
+    let h=`<div class="result-card" id="${cid}">`;
+    h+=`<div class="rc-head"><span class="fn">📷 ${r.filename}</span><span class="dl" onclick="downloadCard('${cid}','${r.filename}')">⬇ 下载</span></div>`;
+    h+=`<div class="img-tabs">`;
+    tabs.forEach(([k,lb],j)=>h+=`<button class="${j===0?'on':''}" onclick="switchTab('${cid}','${k}',this)">${lb}</button>`);
+    if(tabs.length>=2)h+=`<button onclick="startCmp('${cid}','${tabs[0][0]}','${tabs[1][0]}')">⇔ 对比</button>`;
+    h+=`</div>`;
+    const firstFmt=tabs[0][3]?'png':'jpeg';
+    h+=`<div class="img-wrap" id="${cid}_body"><img src="data:image/${firstFmt};base64,${tabs[0][2]}" onclick="openLB(this.src)" id="${cid}_img"></div>`;
+    h+=`<div style="display:none">`;tabs.forEach(([k,lb,b64,png])=>h+=`<span id="${cid}_d_${k}" data-b64="${b64}" data-png="${png}"></span>`);h+=`</div>`;
+    if(r.soil_proxy_warning)h+=`<div style="margin:8px 10px 0;padding:8px 10px;border-left:3px solid #f4a62a;background:rgba(244,166,42,.08);font-size:10px;color:#f4bd64;line-height:1.5">⚠ ${r.soil_proxy_warning}</div>`;
+    if(r.weed_candidate_warning)h+=`<div style="margin:8px 10px 0;padding:8px 10px;border-left:3px solid #f4a62a;background:rgba(244,166,42,.08);font-size:10px;color:#f4bd64;line-height:1.5">⚠ ${r.weed_candidate_warning}</div>`;
+    if(r.weed_error)h+=`<div style="margin:8px 10px 0;padding:8px 10px;border-left:3px solid #e74c3c;background:rgba(231,76,60,.08);font-size:10px;color:#ff8a80;line-height:1.5">杂草候选分析未完成：${r.weed_error}</div>`;
+    h+=`<div class="stats">`;
+    if(currentMode==='vegetation'){
+      if(r.plant_total_mu!==undefined)h+=`<div class="stat"><div class="sv" style="font-size:22px;color:#2ecc71">${r.plant_total_mu.toLocaleString()}</div><div class="sl">农田面积 (亩)</div></div>`;
+      if(r.plant_pct!==undefined)h+=`<div class="stat"><div class="sv" style="font-size:22px;color:#2ecc71">${r.plant_pct}%</div><div class="sl">种植覆盖率</div></div>`;
+      if(r.field_count!==undefined)h+=`<div class="stat"><div class="sv">${r.field_count}</div><div class="sl">田块数</div></div>`;
+      if(r.total_mu!==undefined)h+=`<div class="stat"><div class="sv">${r.total_mu.toLocaleString()}</div><div class="sl">地块总面积 (亩)</div></div>`;
+      if(r.fields&&r.fields.length){
+        h+=`</div><div style="padding:6px 12px 10px;display:flex;flex-wrap:wrap;gap:6px">`;
+        const fcolors=['#e74c3c','#e67e22','#f1c40f','#2ecc71','#1abc9c','#3498db','#9b59b6','#e91e63','#00bcd4','#8bc34a','#ff5722','#3f51b5','#cddc39','#009688'];
+        r.fields.forEach((f,i)=>{
+          h+=`<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;background:#0d180d;padding:4px 8px;border-radius:6px;color:var(--text)"><span style="width:10px;height:10px;border-radius:3px;background:${fcolors[i%fcolors.length]}"></span>#${i+1} ${f.area_mu.toLocaleString()}亩</span>`;
+        });
+      }
+    }else if(currentMode==='predict'){
+      if(r.yolo_detections!==undefined)h+=`<div class="stat"><div class="sv" style="font-size:22px;color:#2ecc71">${r.yolo_detections}</div><div class="sl">AI 检出数</div></div>`;
+      if(r.total_mu!==undefined)h+=`<div class="stat"><div class="sv">${r.total_mu.toLocaleString()}</div><div class="sl">地块总面积 (亩)</div></div>`;
+    }else if(currentMode==='weed'){
+      if(r.weed_candidate_count!==undefined)h+=`<div class="stat"><div class="sv" style="font-size:22px;color:#f4bd64">${r.weed_candidate_count}</div><div class="sl">杂草候选数</div></div>`;
+      if(r.weed_candidate_area_m2!==undefined)h+=`<div class="stat"><div class="sv">${r.weed_candidate_area_m2.toLocaleString()}</div><div class="sl">候选面积 (m²)</div></div>`;
+      if(r.weed_candidate_pct!==undefined)h+=`<div class="stat"><div class="sv">${r.weed_candidate_pct}%</div><div class="sl">候选覆盖率</div></div>`;
+      if(r.off_row_candidate_count!==undefined)h+=`<div class="stat"><div class="sv">${r.off_row_candidate_count}</div><div class="sl">行外候选</div></div>`;
+      if(r.in_row_suspect_count!==undefined)h+=`<div class="stat"><div class="sv">${r.in_row_suspect_count}</div><div class="sl">行内异常</div></div>`;
+      if(r.crop_row_angle_deg!==undefined&&r.crop_row_angle_deg!==null)h+=`<div class="stat"><div class="sv">${r.crop_row_angle_deg}°</div><div class="sl">作物行方向</div></div>`;
+      if(r.crop_row_confidence!==undefined&&r.crop_row_confidence!==null)h+=`<div class="stat"><div class="sv">${(r.crop_row_confidence*100).toFixed(1)}%</div><div class="sl">行方向置信度</div></div>`;
+    }else{
+      const defs=[['plant_total_mu','农田面积(亩)'],['plant_pct','种植覆盖率%'],['field_count','田块数'],['total_mu','地块(亩)'],['yolo_detections','AI检出数'],['weed_candidate_count','杂草候选数'],['weed_candidate_pct','杂草候选率%'],['off_row_candidate_count','行外候选'],['in_row_suspect_count','行内异常']];
+      defs.forEach(([k,lb])=>{if(r[k]!==undefined&&r[k]!==null)h+=`<div class="stat"><div class="sv">${typeof r[k]==='number'?r[k].toLocaleString():r[k]}</div><div class="sl">${lb}</div></div>`});
+    }
+    if(r.yolo_model)h+=`<div class="stat"><div class="sv" style="font-size:10px;background:${r.yolo_model.includes('5ch')?'rgba(46,204,113,.15)':'rgba(33,150,243,.15)'};color:${r.yolo_model.includes('5ch')?'var(--green)':'#2196f3'};padding:2px 8px;border-radius:10px">${r.yolo_model}</div><div class="sl">模型</div></div>`;
+    h+=`</div></div>`;
+    el.innerHTML+=h;
+  });
+  if(items.length>0)$id('emptyState').style.display='none';
+}
+
+function switchTab(cid,key,btn){
+  btn.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  const el=document.getElementById(`${cid}_d_${key}`);
+  if(!el)return;
+  const b64=el.getAttribute('data-b64');
+  const png=el.getAttribute('data-png')==='true';
+  $id(`${cid}_img`).src=`data:image/${png?'png':'jpeg'};base64,${b64}`;
+}
+
+function startCmp(cid,k1,k2){
+  const d1=document.getElementById(`${cid}_d_${k1}`), d2=document.getElementById(`${cid}_d_${k2}`);
+  if(!d1||!d2)return;
+  const body=$id(`${cid}_body`);
+  const png1=d1.getAttribute('data-png')==='true';
+  const png2=d2.getAttribute('data-png')==='true';
+  body.innerHTML=`<div class="cmp-wrap" id="${cid}_cmp" onmousemove="mv(event,'${cid}_cmp')" ontouchmove="mv(event,'${cid}_cmp')">
+    <img src="data:image/${png2?'png':'jpeg'};base64,${d2.getAttribute('data-b64')}">
+    <img class="top-img" src="data:image/${png1?'png':'jpeg'};base64,${d1.getAttribute('data-b64')}" id="${cid}_top">
+    <div class="divider" id="${cid}_line"></div><div class="knob" id="${cid}_knob">⇔</div></div>`;
+}
+function mv(e,id){
+  const el=document.getElementById(id);if(!el)return;
+  const r=el.getBoundingClientRect();
+  const x=(e.touches?e.touches[0].clientX:e.clientX)-r.left;
+  const p=Math.max(0,Math.min(100,(x/r.width)*100));
+  const top=document.getElementById(id.replace('_cmp','_top'));
+  const line=document.getElementById(id.replace('_cmp','_line'));
+  const knob=document.getElementById(id.replace('_cmp','_knob'));
+  if(top)top.style.clipPath=`inset(0 ${100-p}% 0 0)`;
+  if(line)line.style.left=p+'%';
+  if(knob)knob.style.left=p+'%';
+}
+
+function openLB(src){$id('lbImg').src=src;$id('lb').classList.add('on')}
+function closeLB(){$id('lb').classList.remove('on')}
+
+async function exportCSV(){
+  if(!csvData.length)return;
+  const r=await fetch('/api/export_csv',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(csvData)});
+  const blob=await r.blob();
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='农智眼_体检报告.csv';a.click();
+  toast('报告已下载');
+}
+function downloadCard(cid,fn){
+  const base=fn.replace(/\.jpe?g$/i,'');
+  document.querySelectorAll(`#${cid} [id^="${cid}_d_"]`).forEach(el=>{
+    const b64=el.getAttribute('data-b64');if(!b64)return;
+    const key=el.id.replace(`${cid}_d_`,'');
+    const a=document.createElement('a');a.download=`${base}_${key}.png`;a.href=`data:image/png;base64,${b64}`;a.click();
+  });
+  toast('图片已下载');
+}
+function toast(msg){
+  const el=$id('toast');el.textContent=msg;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2000);
+}
+</script>
+</body>
+</html>

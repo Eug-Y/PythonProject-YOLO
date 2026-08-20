@@ -1,0 +1,26 @@
+{
+  "version": "data_v6_terrain_ablation_v1",
+  "groups": {
+    "current_5ch": ["R", "G", "B", "NDVI", "NDRE"],
+    "slope_6ch": ["R", "G", "B", "NDVI", "NDRE", "SLOPE"],
+    "slope_aspect_8ch": ["R", "G", "B", "NDVI", "NDRE", "SLOPE", "ASPECT_SIN", "ASPECT_COS"],
+    "slope_tri_tpi_8ch": ["R", "G", "B", "NDVI", "NDRE", "SLOPE", "TRI", "TPI"],
+    "terrain_relief_8ch": ["R", "G", "B", "NDVI", "NDRE", "SLOPE", "TRI", "RELIEF5"],
+    "terrain_compact_10ch": ["R", "G", "B", "NDVI", "NDRE", "SLOPE", "ASPECT_SIN", "ASPECT_COS", "TRI", "TPI"]
+  },
+  "selection_policy": {
+    "splits": ["train", "valid"],
+    "held_out": "test",
+    "paired_control": "current_5ch",
+    "models": [
+      "yolo11n-seg.pt", "yolo11s-seg.pt",
+      "yolov8n-seg.pt", "yolov8s-seg.pt",
+      "yolo12n-seg.pt", "yolo12s-seg.pt",
+      "yolo26n-seg.pt", "yolo26s-seg.pt",
+      "yolov9c-seg.pt"
+    ],
+    "initial_screen_model": "yolo11n-seg.pt",
+    "model_mixing": "Late mask fusion is allowed only after each component passes paired validation on its own. YOLOv9c must use attention=none.",
+    "raw_elevation_allowed": false
+  }
+}

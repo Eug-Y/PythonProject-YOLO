@@ -1,0 +1,7 @@
+train: ./datasets/Data_v2/train/images
+val: ./datasets/Data_v2/valid/images
+test: ./datasets/Data_v2/test/images
+
+nc: 1
+names: ['land']
+channels: 5

@@ -1,0 +1,10 @@
+# Frozen final-evaluation contract for RGB + MCARI.
+# Training YAMLs do not expose test; use this file only after best.pt is frozen.
+path: D:/PythonProject-YOLO/datasets/Data_v3
+train: train/images
+val: valid/images
+test: test/images
+
+nc: 1
+names: ['land']
+channels: 4

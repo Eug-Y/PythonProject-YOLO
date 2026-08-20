@@ -1,0 +1,45 @@
+"""Evaluate the locked V21 candidate against production on test exactly once."""
+
+from __future__ import annotations
+
+from contextlib import contextmanager
+from pathlib import Path
+
+import run_data_v20_final_test as _implementation
+
+
+ROOT = Path(__file__).resolve().parent
+
+_OVERRIDES = {
+    "V20_SUMMARY": ROOT / "logs" / "v21_sparse_context_half_multiseed.summary.json",
+    "OUTPUT": ROOT / "runs" / "final_evaluation" / "data_v21_locked_test",
+    "GUARD": ROOT / "logs" / "data_v21_final_test_guard.json",
+    "STATUS": ROOT / "logs" / "data_v21_final_test.status.json",
+    "LOG": ROOT / "logs" / "data_v21_final_test.log",
+    "EXPERIMENT_LABEL": "V21",
+    "ARTIFACT_PREFIX": "data_v21",
+}
+
+
+@contextmanager
+def _configured():
+    previous = {name: getattr(_implementation, name) for name in _OVERRIDES}
+    try:
+        for name, value in _OVERRIDES.items():
+            setattr(_implementation, name, value)
+        yield
+    finally:
+        for name, value in previous.items():
+            setattr(_implementation, name, value)
+
+fixed_totals = _implementation.fixed_totals
+upgrade_decision = _implementation.upgrade_decision
+
+
+def main() -> int:
+    with _configured():
+        return _implementation.main()
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

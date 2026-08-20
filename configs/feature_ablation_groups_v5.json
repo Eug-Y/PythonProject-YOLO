@@ -1,0 +1,46 @@
+{
+  "version": "data_v5_group_ablation_v1",
+  "groups": {
+    "rgb": ["R", "G", "B"],
+    "add_vari": ["R", "G", "B", "VARI"],
+    "add_sipi": ["R", "G", "B", "SIPI"],
+    "add_mcari": ["R", "G", "B", "MCARI"],
+    "add_ndvi_std5": ["R", "G", "B", "NDVI_STD5"],
+    "mcari_sipi_5ch": ["R", "G", "B", "MCARI", "SIPI"],
+    "mcari_ndvi_std5_5ch": ["R", "G", "B", "MCARI", "NDVI_STD5"]
+  },
+  "statistical_screen": {
+    "report": "reports/Data_v5_feature_factor_analysis/index.html",
+    "promoted": {
+      "MCARI": 0.0096586,
+      "SIPI": 0.0027743,
+      "VARI": 0.0011761,
+      "NDVI_STD5": 0.0005834
+    },
+    "screened_out": {
+      "ARVI": -0.0007075,
+      "PSRI": -0.0000887,
+      "MTCI": 0.0000544,
+      "NDVI_GRAD": -0.0000615
+    },
+    "metric": "validation permutation AUC drop",
+    "threshold": 0.0005
+  },
+  "selection_policy": {
+    "splits": ["train", "valid"],
+    "held_out": "test",
+    "initialization": "mean",
+    "attention": "ca_eca",
+    "model": "yolo11n-seg.pt",
+    "stage1_imgsz": 640,
+    "stage1_epochs": 30,
+    "seed": 0,
+    "promotion_threshold_mask_map50_95_pp": 0.3
+  },
+  "notes": [
+    "All layouts start with R,G,B to preserve pretrained stem semantics.",
+    "Do not train the full 11-channel store as one group; four low-contribution additions were screened out.",
+    "Only candidates that beat paired RGB by at least 0.3 pp proceed to multi-seed validation.",
+    "The held-out test split remains sealed until the final channel set is frozen."
+  ]
+}

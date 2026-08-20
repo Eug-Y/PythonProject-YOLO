@@ -1,0 +1,83 @@
+{
+  "version": "data_v5_candidates_v1",
+  "sensor": "DJI P4 Multispectral FC6360",
+  "storage": {
+    "dtype": "uint8",
+    "range": [0, 255],
+    "decode": "float32(value) / 255.0"
+  },
+  "source_bands": ["Blue", "Green", "Red", "RedEdge", "NIR"],
+  "channels": [
+    "R",
+    "G",
+    "B",
+    "VARI",
+    "ARVI",
+    "SIPI",
+    "PSRI",
+    "MCARI",
+    "MTCI",
+    "NDVI_GRAD",
+    "NDVI_STD5"
+  ],
+  "selection_split": ["train", "valid"],
+  "held_out_split": "test",
+  "feature_policy": {
+    "deployment_model_unchanged": true,
+    "excluded_from_new_training_candidates": [
+      "NIR",
+      "RedEdge",
+      "NDVI",
+      "NDRE",
+      "GNDVI",
+      "SAVI",
+      "OSAVI",
+      "MSAVI2",
+      "EVI2",
+      "RECI",
+      "BI",
+      "SCI",
+      "ExG",
+      "RE_BSI_PROXY"
+    ],
+    "reason": "Data_v4 YOLO ablations showed no stable independent-test gain; several families were also highly redundant. RGB remains the control and all Data_v5 additions must earn retention on train/valid only.",
+    "data_v5_statistical_screen": {
+      "promoted_to_yolo_ablation": ["MCARI", "SIPI", "VARI", "NDVI_STD5"],
+      "screened_out_before_yolo": ["ARVI", "PSRI", "MTCI", "NDVI_GRAD"],
+      "metric": "validation permutation AUC drop",
+      "threshold": 0.0005,
+      "report": "reports/Data_v5_feature_factor_analysis/index.html"
+    },
+    "data_v5_yolo_screen": {
+      "stable_single_features": ["NDVI_STD5", "MCARI"],
+      "rejected_combination": ["MCARI", "NDVI_STD5"],
+      "combination_reason": "Three-seed combination averaged 0.62 pp below the best single feature and was positive in only 1/3 seeds.",
+      "highres_winner": "MCARI",
+      "highres_delta_vs_rgb_pp": 1.03,
+      "next_stage": "Completed: formal training stopped at epoch 218; frozen candidate was evaluated on test exactly once"
+    },
+    "final_deployment_decision": {
+      "research_candidate": "v5_final_rgb_mcari_1024_seed0_v1",
+      "research_channels": ["R", "G", "B", "MCARI"],
+      "deployed_model": "exp_ca_5ch_grouped_reviewed_v1",
+      "deployed_channels": ["R", "G", "B", "NDVI", "NDRE"],
+      "upgrade_eligible": false,
+      "decision": "archive MCARI candidate; keep deployed website model unchanged",
+      "candidate_test_mask_map50_95": 0.3782000738584634,
+      "deployed_test_mask_map50_95": 0.38863221816061044,
+      "candidate_delta_pp": -1.0432144302147062,
+      "test_evaluation_count": 1,
+      "test_reuse_policy": "locked: do not evaluate this candidate on the held-out test again and do not use test results for feature tuning",
+      "evaluation_guard": "reports/Data_v5_final_candidate_test/evaluation_guard.json",
+      "final_report": "reports/Data_v5_final_model_comparison/index.html"
+    }
+  },
+  "notes": [
+    "This compact candidate set does not alter the deployed R,G,B,NDVI,NDRE model contract.",
+    "Standard BSI and NDTI remain unavailable because DJI P4M has no SWIR band.",
+    "MCARI, MTCI and PSRI use the closest P4M band mapping and require empirical validation.",
+    "NDVI_GRAD and NDVI_STD5 are project spatial features, not standard spectral indices.",
+    "The held-out test split was not used for feature selection and was evaluated exactly once after candidate freeze.",
+    "The RGB+MCARI candidate did not pass deployment criteria; the website remains on R,G,B,NDVI,NDRE."
+  ]
+}

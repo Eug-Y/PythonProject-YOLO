@@ -1,0 +1,55 @@
+{
+  "version": "deployment_config_v2_yolo11_primary_fusion",
+  "state": "active",
+  "model_name": "v27_yolo11_primary_fusion_v1",
+  "deployment_type": "strict_yolo11_primary_fusion",
+  "checkpoint": "runs/segment/land_seg/v19_yolo11_c0_nooverlap_b1_seed0_v1/weights/best.pt",
+  "sha256": "eea619abdc0ba0e71404942895c15b045d0d63bf6fbc9ad999a4874c35061181",
+  "primary": {
+    "role": "primary",
+    "architecture": "YOLO11n-seg",
+    "checkpoint": "runs/segment/land_seg/v19_yolo11_c0_nooverlap_b1_seed0_v1/weights/best.pt",
+    "sha256": "eea619abdc0ba0e71404942895c15b045d0d63bf6fbc9ad999a4874c35061181"
+  },
+  "auxiliary": {
+    "role": "auxiliary",
+    "architecture": "YOLOv8n-seg",
+    "checkpoint": "runs/segment/land_seg/exp_ca_5ch_grouped_reviewed_v1/weights/best.pt",
+    "sha256": "589a1d5600e58b1b5932a472137bddc057821daac4c8a5f98bb1e3a94715649b"
+  },
+  "fusion_config": "reports/Data_v27_yolo11_fusion_recall_recovery/locked_fusion_config.json",
+  "fusion_config_sha256": "b90d85b26a708b70ea927ce9c60a71682474ffc1f919c7a069779d66a4e0b9e3",
+  "confidence": 0.2,
+  "unconfirmed_score_threshold": 0.225,
+  "imgsz": 1024,
+  "channels": [
+    "R",
+    "G",
+    "B",
+    "NDVI",
+    "NDRE"
+  ],
+  "every_output_requires_yolo11": true,
+  "release_version": "data_v27_yolo11_primary_fusion_rc1",
+  "release_blind_summary": "logs/v27_release_blind_final.summary.json",
+  "release_blind_summary_sha256": "93bc6211a849d38d78671883ef6dafccf6e69ca85ea81f77f4c702989acab669",
+  "promoted_at": "2026-08-20T21:02:29+08:00",
+  "rollback_model": {
+    "version": "deployment_config_v1",
+    "state": "active",
+    "model_name": "exp_ca_5ch_grouped_reviewed_v1",
+    "checkpoint": "runs/segment/land_seg/exp_ca_5ch_grouped_reviewed_v1/weights/best.pt",
+    "sha256": "589a1d5600e58b1b5932a472137bddc057821daac4c8a5f98bb1e3a94715649b",
+    "confidence": 0.25,
+    "imgsz": 1024,
+    "channels": [
+      "R",
+      "G",
+      "B",
+      "NDVI",
+      "NDRE"
+    ],
+    "release_version": "incumbent_pre_v20",
+    "rollback_model": null
+  }
+}

@@ -1,0 +1,48 @@
+# Python and tool caches
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Ultralytics dataset caches
+**/labels.cache
+
+# Local environments and IDE metadata
+.venv/
+.idea/
+.vscode/
+.claude/
+.agents/
+.codex/
+
+# Private/local data (not distributable through GitHub)
+datasets/
+多光谱图片/
+待标注_100张/
+
+# Training runs and generated evidence are ignored by default. The frozen V27
+# production weights/config summaries are force-added explicitly to Git.
+runs/
+reports/
+logs/
+
+# Local runtime output and generated media
+*.log
+test_vis_*/
+test_match_*
+debug_web_*
+tmp_*.jpg
+*.npy
+*.npz
+*.tif
+*.tiff
+*.pt
+*.onnx
+*.engine
+*.zip
+*.exe
+
+# Local tunnel credentials/configuration
+tunnel_config.json

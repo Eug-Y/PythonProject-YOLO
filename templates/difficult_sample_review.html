@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Valid 困难样本复核</title>
+  <style>
+    :root{font-family:Inter,"Microsoft YaHei",sans-serif;color-scheme:dark;--bg:#07110c;--card:#102019;--line:#294336;--green:#37d77c;--gold:#f4bd64;--text:#e7f2eb;--muted:#9eb2a5}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text)}
+    header{position:sticky;top:0;z-index:5;background:#09150fcc;border-bottom:1px solid var(--line);backdrop-filter:blur(12px);padding:14px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+    h1{font-size:18px;margin:0}.progress{min-width:280px}.bar{height:8px;background:#1b2d24;border-radius:8px;overflow:hidden}.bar>div{height:100%;background:var(--green);width:0}.progress-text{font-size:12px;color:var(--muted);margin-bottom:6px;text-align:right}
+    main{width:min(1580px,calc(100% - 30px));margin:20px auto 60px}.toolbar,.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+    .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.toolbar button,.toolbar select{background:#172b20;color:var(--text);border:1px solid #355744;border-radius:8px;padding:8px 12px}.toolbar .spacer{flex:1}
+    .meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.pill{font-size:12px;border-radius:999px;padding:5px 9px;background:#1b3225;color:#cce5d5}.pill.warn{background:#3b2d14;color:#ffd78e}.name{font-size:20px;font-weight:700;margin-right:8px}
+    .images{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}.panel{background:#09120d;border:1px solid var(--line);border-radius:10px;overflow:hidden}.panel h3{font-size:13px;margin:0;padding:9px 12px;color:#d3e6da}.panel img{display:block;width:100%;aspect-ratio:1/1;object-fit:contain;background:#777}
+    .decision{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}.decision button{border:0;border-radius:10px;padding:12px 10px;font-size:14px;font-weight:700;cursor:pointer}.ok{background:#2aa764;color:white}.fix{background:#d08b2b;color:#171006}.defer{background:#526158;color:white}.decision button.active{outline:3px solid white}
+    textarea{width:100%;min-height:64px;margin-top:10px;background:#09120d;color:var(--text);border:1px solid var(--line);border-radius:9px;padding:10px;resize:vertical}.hint{color:var(--muted);font-size:12px;margin-top:9px}.empty{padding:70px;text-align:center;color:var(--muted)}
+    @media(max-width:900px){header{align-items:flex-start;flex-direction:column}.progress{width:100%}.images{grid-template-columns:1fr}.decision{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<header><h1>Valid 困难样本复核（不读取 test）</h1><div class="progress"><div class="progress-text" id="progressText">加载中…</div><div class="bar"><div id="barFill"></div></div></div></header>
+<main>
+  <div class="toolbar"><button onclick="move(-1)">← 上一张</button><button onclick="move(1)">下一张 →</button><select id="filter" onchange="applyFilter()"><option value="pending">只看待复核</option><option value="all">全部</option><option value="needs_label_fix">只看需修正</option><option value="label_ok_hard">只看标签正确</option><option value="defer">只看暂缓</option></select><span class="spacer"></span><button onclick="undoCurrent()">撤销当前结论</button></div>
+  <div id="content" class="card"><div class="empty">正在加载队列…</div></div>
+</main>
+<script>
+let allItems=[],items=[],index=0;
+const $=id=>document.getElementById(id);
+async function load(){const r=await fetch('/api/queue');const d=await r.json();allItems=d.items;updateStatus(d.status);applyFilter(false)}
+function updateStatus(s){$('progressText').textContent=`已复核 ${s.completed}/${s.total} · 待处理 ${s.remaining} · 需修正 ${s.counts.needs_label_fix}`;$('barFill').style.width=`${s.total?s.completed/s.total*100:0}%`}
+function applyFilter(reset=true){const f=$('filter').value;items=allItems.filter(x=>f==='all'||(f==='pending'?!x.decision:x.decision===f));if(reset)index=0;index=Math.max(0,Math.min(index,items.length-1));render()}
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function render(){const box=$('content');if(!items.length){box.innerHTML='<div class="empty">当前筛选条件下没有图片。</div>';return}const x=items[index],b=x.batch_index;box.innerHTML=`<div class="meta"><span class="name">#${x.rank} ${esc(x.image)}</span><span class="pill">困难度 ${x.difficulty_score}</span><span class="pill">F1 ${x.mask_f1}</span><span class="pill">FP ${x.mask_fp}</span><span class="pill">FN ${x.mask_fn}</span><span class="pill">${esc(x.reasons)}</span>${Number(x.label_warning_count)?`<span class="pill warn">标签警告 ${x.label_warning_count}：${esc(x.label_warning_codes)}</span>`:''}</div><div class="images"><section class="panel"><h3>原图</h3><img src="/media/original/${encodeURIComponent(x.image)}"></section><section class="panel"><h3>人工标注</h3><img src="/media/labels/${b}"></section><section class="panel"><h3>模型预测</h3><img src="/media/pred/${b}"></section></div><textarea id="note" placeholder="可选：记录道路误检、漏标、边界偏移等具体问题">${esc(x.note)}</textarea><div class="decision"><button class="ok ${x.decision==='label_ok_hard'?'active':''}" onclick="decide('label_ok_hard')">1　标签正确·困难样本</button><button class="fix ${x.decision==='needs_label_fix'?'active':''}" onclick="decide('needs_label_fix')">2　标签需要修正</button><button class="defer ${x.decision==='defer'?'active':''}" onclick="decide('defer')">3　暂不处理</button></div><div class="hint">键盘：←/→ 切换；1/2/3 保存结论。结果实时写入 review_state.json。</div>`}
+function move(delta){if(!items.length)return;index=(index+delta+items.length)%items.length;render()}
+async function decide(decision){if(!items.length)return;const current=items[index];const r=await fetch('/api/decision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:current.image,decision,note:$('note').value})});const d=await r.json();if(!r.ok){alert(d.error||'保存失败');return}const master=allItems.find(x=>x.image===current.image);master.decision=decision;master.note=$('note').value;updateStatus(d.status);if($('filter').value==='pending'){applyFilter(false)}else{render();move(1)}}
+async function undoCurrent(){if(!items.length)return;const current=items[index];const r=await fetch('/api/undo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:current.image})});const d=await r.json();if(!r.ok){alert(d.error||'撤销失败');return}const master=allItems.find(x=>x.image===current.image);master.decision=null;master.note='';updateStatus(d.status);applyFilter(false)}
+document.addEventListener('keydown',e=>{if(document.activeElement?.tagName==='TEXTAREA')return;if(e.key==='ArrowLeft')move(-1);if(e.key==='ArrowRight')move(1);if(['1','2','3'].includes(e.key))decide({1:'label_ok_hard',2:'needs_label_fix',3:'defer'}[e.key])});load();
+</script>
+</body></html>

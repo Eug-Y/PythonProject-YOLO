@@ -1,0 +1,25 @@
+{
+  "version": "data_v7_soil_vegetation_ablation_v1",
+  "groups": {
+    "current_5ch": ["R", "G", "B", "NDVI", "NDRE"],
+    "add_re_bsi_proxy_6ch": ["R", "G", "B", "NDVI", "NDRE", "RE_BSI_PROXY"],
+    "add_mcari_6ch": ["R", "G", "B", "NDVI", "NDRE", "MCARI"],
+    "soil_vegetation_7ch": ["R", "G", "B", "NDVI", "NDRE", "RE_BSI_PROXY", "MCARI"]
+  },
+  "selection_policy": {
+    "splits": ["train", "valid"],
+    "held_out": "test",
+    "paired_control": "current_5ch",
+    "control_seed0_mask_map50_95": 0.36968,
+    "model": "yolov8n-seg.pt",
+    "attention": "none",
+    "initialization_checkpoint": "runs/segment/land_seg/v6_preterrain_current5_yolov8n_none_seed0_v1/weights/best.pt",
+    "new_channel_initialization": "mean",
+    "screen_seed": 0,
+    "screen_epochs": 30,
+    "screen_imgsz": 1024,
+    "promotion_threshold_mask_map50_95": 0.003,
+    "slope_included": false,
+    "raw_elevation_allowed": false
+  }
+}

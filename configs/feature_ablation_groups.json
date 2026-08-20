@@ -1,0 +1,31 @@
+{
+  "version": "data_v4_group_ablation_v1",
+  "groups": {
+    "rgb": ["R", "G", "B"],
+    "current_5ch": ["R", "G", "B", "NDVI", "NDRE"],
+    "raw_spectral_5ch": ["R", "G", "B", "NIR", "RedEdge"],
+    "topk_6ch": ["R", "G", "B", "EVI2", "GNDVI", "RE_BSI_PROXY"],
+    "add_ndvi": ["R", "G", "B", "NDVI"],
+    "add_ndre": ["R", "G", "B", "NDRE"],
+    "add_nir": ["R", "G", "B", "NIR"],
+    "add_rededge": ["R", "G", "B", "RedEdge"],
+    "add_evi2": ["R", "G", "B", "EVI2"],
+    "add_gndvi": ["R", "G", "B", "GNDVI"],
+    "add_re_bsi_proxy": ["R", "G", "B", "RE_BSI_PROXY"]
+  },
+  "selection_policy": {
+    "splits": ["train", "valid"],
+    "held_out": "test",
+    "initialization": "mean",
+    "attention": "ca_eca",
+    "model": "yolo11n-seg.pt",
+    "imgsz": 640,
+    "epochs": 40,
+    "seed": 0
+  },
+  "notes": [
+    "All layouts begin with R,G,B so pretrained stem weights have identical semantics.",
+    "RE_BSI_PROXY is an experimental RedEdge-based proxy, not standard BSI.",
+    "The held-out test split is not used for feature selection."
+  ]
+}

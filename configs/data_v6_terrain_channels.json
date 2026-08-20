@@ -1,0 +1,31 @@
+{
+  "version": "data_v6_candidates_terrain_v1",
+  "storage": {
+    "dtype": "uint8",
+    "range": [0, 255],
+    "decode": "float32(value) / 255.0"
+  },
+  "channels": [
+    "R", "G", "B", "NDVI", "NDRE",
+    "SLOPE", "ASPECT_SIN", "ASPECT_COS", "TRI", "TPI", "RELIEF5"
+  ],
+  "terrain": {
+    "required_source": "A DEM, DSM or DTM pixel-aligned to every source JPG; RGB and multispectral reflectance are not elevation substitutes.",
+    "accepted_formats": ["npy", "tif", "tiff"],
+    "pixel_size_m": null,
+    "encoding_scales_m": {
+      "TRI": 2.0,
+      "TPI": 2.0,
+      "RELIEF5": 4.0
+    }
+  },
+  "selection_split": ["train", "valid"],
+  "held_out_split": "test",
+  "feature_policy": {
+    "raw_elevation_excluded": true,
+    "reason": "Absolute elevation can leak flight/site identity. Relative shape factors are safer candidates.",
+    "screening_order": ["slope_6ch", "slope_aspect_8ch", "slope_tri_tpi_8ch", "terrain_compact_10ch"],
+    "promotion_rule": "Promote only paired train/valid gains that remain stable across at least three grouped seeds.",
+    "test_policy": "Do not generate or evaluate test terrain features until one final candidate is frozen."
+  }
+}

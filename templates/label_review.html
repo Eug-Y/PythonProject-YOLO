@@ -1,0 +1,1207 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Data_v3 标注复核台</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #162126;
+      --muted: #607078;
+      --line: #d8e0e3;
+      --panel: #ffffff;
+      --ground: #eef2f3;
+      --accent: #087a62;
+      --accent-dark: #055d4b;
+      --danger: #c33f32;
+      --warning: #b56a12;
+      --canvas: #20282c;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body { font-family: "Segoe UI", "Microsoft YaHei", Arial, sans-serif; color: var(--ink); background: var(--ground); overflow: hidden; }
+    button, select { font: inherit; letter-spacing: 0; }
+    button { border: 1px solid var(--line); background: white; color: var(--ink); border-radius: 4px; cursor: pointer; }
+    button:hover { border-color: #9aa9af; background: #f7f9f9; }
+    button:disabled { cursor: not-allowed; opacity: .42; }
+    .app { height: 100%; display: grid; grid-template-rows: 54px minmax(0, 1fr); }
+    header { display: flex; align-items: center; gap: 18px; padding: 0 18px; background: #172126; color: white; border-bottom: 1px solid #0e1518; }
+    header h1 { margin: 0; font-size: 18px; font-weight: 650; white-space: nowrap; }
+    .progress { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 120px; }
+    .progress-track { width: min(360px, 44vw); height: 7px; background: #3b484e; border-radius: 3px; overflow: hidden; }
+    .progress-fill { height: 100%; width: 0; background: #29b88f; transition: width .2s ease; }
+    .progress-text { color: #c9d4d8; font-size: 13px; white-space: nowrap; }
+    .header-action { width: 34px; height: 34px; font-size: 20px; background: #253137; color: white; border-color: #46545a; }
+    .main { min-height: 0; display: grid; grid-template-columns: 258px minmax(420px, 1fr) 350px; }
+    .queue { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); background: var(--panel); border-right: 1px solid var(--line); }
+    .queue-head { padding: 12px; border-bottom: 1px solid var(--line); }
+    .queue-head strong { display: block; font-size: 14px; margin-bottom: 9px; }
+    .filters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+    .filters button { height: 32px; font-size: 12px; }
+    .filters button.active { color: white; border-color: var(--accent); background: var(--accent); }
+    .queue-list { overflow: auto; padding: 6px; }
+    .queue-item { width: 100%; display: grid; grid-template-columns: 9px 1fr auto; align-items: center; gap: 9px; padding: 9px 8px; margin-bottom: 4px; text-align: left; border-color: transparent; background: transparent; }
+    .queue-item:hover { background: #f1f5f5; }
+    .queue-item.active { border-color: #88b9ad; background: #e9f4f1; }
+    .queue-item.has-draft .item-title::after { content: " · 草稿"; color: var(--warning); font-size: 10px; font-weight: 500; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #aeb9bd; }
+    .status-dot.kept { background: var(--accent); }
+    .status-dot.redrawn { background: #2679a8; }
+    .status-dot.deleted { background: var(--danger); }
+    .item-main { min-width: 0; }
+    .item-title { display: block; font-weight: 650; font-size: 13px; }
+    .item-code { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .item-line { color: var(--muted); font-size: 11px; }
+    .workspace { min-width: 0; min-height: 0; display: grid; grid-template-rows: 46px minmax(0, 1fr); background: var(--canvas); }
+    .toolbar { display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: #2a3439; border-bottom: 1px solid #11191c; }
+    .tool-button { width: 34px; height: 32px; color: white; background: #354147; border-color: #4b5a61; font-size: 17px; }
+    .tool-button.text { width: auto; padding: 0 11px; font-size: 12px; }
+    .tool-button.active, .action.active { color: white; background: #2679a8; border-color: #2679a8; }
+    .zoom-value { width: 54px; color: #c8d1d5; text-align: center; font-size: 12px; }
+    .mode-label { margin-left: auto; color: #b9c5c9; font-size: 12px; white-space: nowrap; }
+    .canvas-wrap { position: relative; min-width: 0; min-height: 0; overflow: hidden; touch-action: none; }
+    canvas { display: block; width: 100%; height: 100%; cursor: grab; }
+    canvas.editing { cursor: crosshair; }
+    .empty-state { position: absolute; inset: 0; display: grid; place-items: center; color: #a8b5ba; font-size: 14px; pointer-events: none; }
+    .inspector { min-height: 0; overflow: auto; background: var(--panel); border-left: 1px solid var(--line); }
+    .section { padding: 16px; border-bottom: 1px solid var(--line); }
+    .section.action-section { position: sticky; top: 0; z-index: 3; background: var(--panel); box-shadow: 0 4px 12px #17212612; }
+    .section h2 { margin: 0 0 10px; font-size: 16px; }
+    .meta { display: grid; grid-template-columns: 76px 1fr; gap: 7px 10px; margin: 0; font-size: 12px; }
+    .meta dt { color: var(--muted); }
+    .meta dd { min-width: 0; margin: 0; overflow-wrap: anywhere; }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 5px; }
+    .badge { display: inline-flex; padding: 3px 6px; border: 1px solid #e2bf92; border-radius: 3px; background: #fff5e8; color: #8b4e08; font-size: 11px; }
+    .actions { display: grid; gap: 8px; }
+    .action-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .action { min-height: 38px; padding: 7px 10px; font-weight: 600; }
+    .action.primary { color: white; background: var(--accent); border-color: var(--accent); }
+    .action.primary:hover { background: var(--accent-dark); }
+    .action.danger { color: var(--danger); border-color: #e0aaa5; }
+    .action.danger:hover { background: #fff1f0; }
+    .action.blue { color: #1f6f9a; border-color: #9cc3d8; }
+    .edit-actions { display: none; gap: 8px; }
+    .edit-actions.visible { display: grid; }
+    .delete-actions { display: none; gap: 8px; }
+    .delete-actions.visible { display: grid; }
+    .edit-count { color: var(--muted); font-size: 12px; text-align: center; }
+    .draft-status { color: #c9d4d8; font-size: 11px; white-space: nowrap; }
+    .legend { display: grid; grid-template-columns: 16px 1fr; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; }
+    .legend + .legend { margin-top: 7px; }
+    .shortcut-help { margin: 10px 0 0; color: var(--muted); font-size: 11px; line-height: 1.7; }
+    kbd { display: inline-flex; min-width: 24px; height: 22px; align-items: center; justify-content: center; padding: 0 6px; border: 1px solid #c8d1d5; border-bottom-width: 2px; border-radius: 4px; background: #f7f9f9; color: #34434a; font: 600 11px/1 "Segoe UI", sans-serif; }
+    .shortcut-dialog { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; padding: 20px; background: #101719b8; }
+    .shortcut-dialog[hidden] { display: none; }
+    .shortcut-card { width: min(680px, 100%); max-height: min(760px, calc(100vh - 40px)); overflow: auto; padding: 20px; border-radius: 8px; background: white; box-shadow: 0 18px 60px #0006; }
+    .shortcut-card-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+    .shortcut-card h2 { margin: 0; font-size: 18px; }
+    .shortcut-close { width: 34px; height: 34px; font-size: 20px; }
+    .shortcut-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 28px; }
+    .shortcut-group h3 { margin: 0 0 9px; color: var(--muted); font-size: 12px; text-transform: uppercase; }
+    .shortcut-row { display: grid; grid-template-columns: 118px 1fr; align-items: center; min-height: 31px; border-top: 1px solid #edf1f2; font-size: 12px; }
+    .shortcut-keys { display: flex; align-items: center; gap: 4px; }
+    .swatch { width: 14px; height: 4px; background: #46d4b0; }
+    .swatch.target { background: #ff4b3e; }
+    .swatch.draft { background: #ffd34d; }
+    .toast { position: fixed; left: 50%; bottom: 20px; z-index: 20; transform: translate(-50%, 16px); max-width: min(520px, calc(100vw - 30px)); padding: 10px 14px; background: #172126; color: white; border-radius: 4px; opacity: 0; pointer-events: none; transition: .18s ease; font-size: 13px; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .toast.error { background: #9e3028; }
+    .loading { opacity: .55; pointer-events: none; }
+    @media (max-width: 980px) {
+      body { overflow: auto; }
+      .app { min-height: 100%; height: auto; }
+      .main { grid-template-columns: 230px minmax(0, 1fr); grid-template-rows: minmax(520px, calc(100vh - 54px)) auto; }
+      .inspector { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(3, 1fr); }
+      .section { border-bottom: 0; border-right: 1px solid var(--line); }
+    }
+    @media (max-width: 680px) {
+      header { padding: 0 10px; gap: 10px; }
+      header h1 { font-size: 15px; }
+      .progress-track { display: none; }
+      .main { display: grid; grid-template-columns: 1fr; grid-template-rows: 184px 58vh auto; }
+      .queue { border-right: 0; border-bottom: 1px solid var(--line); }
+      .queue-list { display: flex; gap: 5px; overflow-x: auto; overflow-y: hidden; }
+      .queue-item { flex: 0 0 190px; margin: 0; }
+      .workspace { min-width: 0; }
+      .inspector { display: block; }
+      .section { border-right: 0; border-bottom: 1px solid var(--line); }
+      .mode-label { display: none; }
+      .shortcut-groups { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <header>
+      <h1>Data_v3 标注复核台</h1>
+      <div class="progress">
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <span class="progress-text" id="progressText">加载中</span>
+      </div>
+      <span class="draft-status" id="draftStatus"></span>
+      <button class="header-action" id="shortcutButton" title="快捷键（?）">?</button>
+      <button class="header-action" id="undoGlobal" title="撤销上次操作" disabled>↶</button>
+    </header>
+
+    <div class="main">
+      <aside class="queue">
+        <div class="queue-head">
+          <strong>复核队列</strong>
+          <div class="filters">
+            <button class="active" data-filter="all">全部</button>
+            <button data-filter="pending">待处理</button>
+            <button data-filter="done">已处理</button>
+          </div>
+        </div>
+        <div class="queue-list" id="queueList"></div>
+      </aside>
+
+      <section class="workspace">
+        <div class="toolbar">
+          <button class="tool-button" id="zoomOut" title="缩小">−</button>
+          <span class="zoom-value" id="zoomValue">100%</span>
+          <button class="tool-button" id="zoomIn" title="放大">+</button>
+          <button class="tool-button text" id="fitView">适合窗口</button>
+          <button class="tool-button text" id="focusTarget">定位异常</button>
+          <button class="tool-button text" id="previousItem">上一项</button>
+          <button class="tool-button text" id="nextItem">下一项</button>
+          <span class="mode-label" id="modeLabel">拖动画布，滚轮缩放</span>
+        </div>
+        <div class="canvas-wrap" id="canvasWrap">
+          <canvas id="canvas"></canvas>
+          <div class="empty-state" id="emptyState">正在读取标注</div>
+        </div>
+      </section>
+
+      <aside class="inspector">
+        <div class="section action-section">
+          <h2 id="itemTitle">未选择</h2>
+          <dl class="meta">
+            <dt>数据划分</dt><dd id="itemSplit">-</dd>
+            <dt>标签行</dt><dd id="itemLine">-</dd>
+            <dt>来源</dt><dd id="itemSource">-</dd>
+            <dt>状态</dt><dd id="itemStatus">-</dd>
+          </dl>
+        </div>
+        <div class="section">
+          <h2>问题</h2>
+          <div class="badge-row" id="codeBadges"></div>
+        </div>
+        <div class="section">
+          <h2>操作</h2>
+          <div class="actions" id="normalActions">
+            <div class="action-row">
+              <button class="action primary" id="keepButton">保留</button>
+              <button class="action blue" id="redrawButton">编辑/重画</button>
+            </div>
+            <button class="action danger" id="deleteButton">删除异常轮廓</button>
+            <div class="action-row">
+              <button class="action blue" id="addButton">补画新轮廓</button>
+              <button class="action danger" id="deleteOtherButton">删除其他轮廓</button>
+            </div>
+          </div>
+          <div class="edit-actions" id="editActions">
+            <div class="edit-count" id="editModeTitle">重画异常轮廓</div>
+            <div class="edit-count" id="editCount">已添加 0 个点</div>
+            <div class="action-row" style="grid-template-columns:repeat(3,1fr)">
+              <button class="action active" id="moveVertexTool">移动点</button>
+              <button class="action" id="insertVertexTool">插入点</button>
+              <button class="action danger" id="deleteVertexTool">删点</button>
+            </div>
+            <div class="action-row">
+              <button class="action" id="freehandToggle">自由绘制：关</button>
+              <button class="action active" id="snapToggle">自动吸附：开</button>
+            </div>
+            <div class="action-row">
+              <button class="action" id="undoPoint">局部撤销</button>
+              <button class="action" id="redoPoint">重做</button>
+            </div>
+            <button class="action blue" id="finishContour">完成当前轮廓</button>
+            <button class="action" id="clearPoints">全部清空</button>
+            <button class="action" id="saveDraftButton">保存草稿</button>
+            <button class="action primary" id="saveRedraw">保存轮廓</button>
+            <button class="action" id="cancelRedraw">取消并清除草稿</button>
+          </div>
+          <div class="delete-actions" id="deleteActions">
+            <div class="edit-count" id="deleteSelectionText">请在画面中点击一个绿色轮廓</div>
+            <button class="action danger" id="confirmDeleteSelected" disabled>确认删除所选轮廓</button>
+            <button class="action" id="cancelDeleteSelected">取消删除</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="legend"><span class="swatch"></span><span>其他实例</span></div>
+          <div class="legend"><span class="swatch target"></span><span>当前异常轮廓</span></div>
+          <div class="legend"><span class="swatch draft"></span><span>新画/所选轮廓</span></div>
+          <p class="shortcut-help">双击/Enter 完成轮廓 · 右键/Ctrl+Z 撤销<br>空格拖动画布 · 滚轮缩放 · 按 ? 查看全部快捷键</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+  <div class="shortcut-dialog" id="shortcutDialog" role="dialog" aria-modal="true" aria-labelledby="shortcutTitle" hidden>
+    <div class="shortcut-card">
+      <div class="shortcut-card-head">
+        <h2 id="shortcutTitle">键盘快捷键</h2>
+        <button class="shortcut-close" id="shortcutClose" aria-label="关闭快捷键说明">×</button>
+      </div>
+      <div class="shortcut-groups">
+        <section class="shortcut-group">
+          <h3>审核与导航</h3>
+          <div class="shortcut-row"><span class="shortcut-keys"><kbd>[</kbd><kbd>]</kbd></span><span>上一项 / 下一项</span></div>
+          <div class="shortcut-row"><span class="shortcut-keys"><kbd>K</kbd></span><span>保留当前轮廓</span></div>
+          <div class="shortcut-row"><span class="shortcut-keys"><kbd>E</kbd></span><span>编辑 / 重画</span></div>
+          <div class="shortcut-row"><span class="shortcut-keys"><kbd>A</kbd></span><span>补画新轮廓</span></div>
+          <div class="shortcut-row"><span class="shortcut-keys"><kbd>X</kbd></span><span>删除异常轮廓（需确认）</span></div>
+          <div class="shortcut-row"><span class="shortcut-keys"><kbd>Ctrl</kbd><kbd>Z</kbd></span><span>撤销上次审核操作</span></div>
+        </section>
+        <section class="shortcut-group">
+          <h3>视图</h3>
+          <div class="shortcut-row"><span class="shortcut-keys"><kbd>0</kbd></span><span>适合窗口</span></div>
+          <div class="shortcut-row"><span class="shortcut-keys"><kbd>L</kbd></span><span>定位异常</span></div>
+          <div class="shortcut-row"><span class="shortcut-keys"><kbd>Space</kbd></span><span>按住并拖动画布</span></div>
+          <div class="shortcut-row"><span class="shortcut-keys"><kbd>?</kbd></span><span>打开 / 关闭本面板</span></div>
+        </section>
+        <section class="shortcut-group">
+          <h3>轮廓编辑</h3>
+          <div class="shortcut-row"><span class="shortcut-keys"><kbd>M</kbd><kbd>I</kbd><kbd>D</kbd></span><span>移动点 / 插入点 / 删点</span></div>
+          <div class="shortcut-row"><span class="shortcut-keys"><kbd>F</kbd></span><span>开关自由绘制</span></div>
+          <div class="shortcut-row"><span class="shortcut-keys"><kbd>S</kbd></span><span>开关自动吸附</span></div>
+          <div class="shortcut-row"><span class="shortcut-keys"><kbd>Enter</kbd></span><span>完成当前轮廓</span></div>
+          <div class="shortcut-row"><span class="shortcut-keys"><kbd>Delete</kbd></span><span>删除选中的顶点</span></div>
+        </section>
+        <section class="shortcut-group">
+          <h3>保存与撤销</h3>
+          <div class="shortcut-row"><span class="shortcut-keys"><kbd>Ctrl</kbd><kbd>S</kbd></span><span>保存轮廓</span></div>
+          <div class="shortcut-row"><span class="shortcut-keys"><kbd>Ctrl</kbd><kbd>Z</kbd></span><span>局部撤销</span></div>
+          <div class="shortcut-row"><span class="shortcut-keys"><kbd>Ctrl</kbd><kbd>Y</kbd></span><span>局部重做</span></div>
+          <div class="shortcut-row"><span class="shortcut-keys"><kbd>Esc</kbd></span><span>取消编辑 / 关闭面板</span></div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const statusText = {pending: '待处理', kept: '已保留', redrawn: '已重画', deleted: '已删除'};
+    const codeText = {
+      self_intersection: '轮廓自交', duplicate_vertex: '重复顶点', tiny_polygon: '微小多边形',
+      excessive_points: '点数过多', polygon_count_outlier: '实例数异常'
+    };
+    const app = {
+      summary: null, currentId: null, item: null, image: null, filter: 'all', editing: false,
+      editMode: null, selectedHash: null, draft: [], draftContours: [], hover: null,
+      scale: 1, offsetX: 0, offsetY: 0,
+      dragging: false, dragX: 0, dragY: 0, dragVertex: null, activeVertex: null, spaceDown: false,
+      vertexTool: 'move', freehand: false, snap: true, freehandDrawing: false,
+      editHistory: [], editFuture: [], draftTimer: null, draftDirty: false, draftSaving: false
+    };
+    const canvas = $('canvas');
+    const ctx = canvas.getContext('2d');
+
+    function toast(message, error = false) {
+      const el = $('toast');
+      el.textContent = message;
+      el.className = `toast show${error ? ' error' : ''}`;
+      clearTimeout(toast.timer);
+      toast.timer = setTimeout(() => el.className = 'toast', 2600);
+    }
+
+    async function api(url, options = {}) {
+      const response = await fetch(url, {headers: {'Content-Type': 'application/json'}, ...options});
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || `请求失败 (${response.status})`);
+      return data;
+    }
+
+    function clone(value) { return JSON.parse(JSON.stringify(value)); }
+
+    function workspacePayload() {
+      return {
+        mode: app.editMode,
+        vertex_tool: app.vertexTool,
+        draft: clone(app.draft),
+        draft_contours: clone(app.draftContours),
+        selected_hash: app.selectedHash,
+        freehand: app.freehand,
+        snap: app.snap
+      };
+    }
+
+    function editSnapshot() {
+      return {
+        draft: clone(app.draft), draftContours: clone(app.draftContours), activeVertex: clone(app.activeVertex),
+        selectedHash: app.selectedHash, vertexTool: app.vertexTool, freehand: app.freehand, snap: app.snap
+      };
+    }
+
+    function restoreEditSnapshot(snapshot) {
+      app.draft = clone(snapshot.draft);
+      app.draftContours = clone(snapshot.draftContours);
+      app.activeVertex = clone(snapshot.activeVertex);
+      app.selectedHash = snapshot.selectedHash;
+      app.vertexTool = snapshot.vertexTool;
+      app.freehand = snapshot.freehand;
+      app.snap = snapshot.snap;
+      updateEditCount(); updateToolButtons(); updateDeleteSelection(); draw(); markDraftDirty();
+    }
+
+    function recordEditSnapshot() {
+      app.editHistory.push(editSnapshot());
+      if (app.editHistory.length > 60) app.editHistory.shift();
+      app.editFuture = [];
+    }
+
+    function updateDraftStatus(message = '') {
+      $('draftStatus').textContent = message || (app.draftSaving ? '正在保存草稿…' : app.draftDirty ? '草稿待保存' : '');
+    }
+
+    function markDraftDirty() {
+      if (!app.editing || !app.item || app.item.status !== 'pending') return;
+      app.draftDirty = true;
+      updateDraftStatus();
+      clearTimeout(app.draftTimer);
+      app.draftTimer = setTimeout(() => saveDraft(false), 550);
+    }
+
+    async function saveDraft(showToast = true) {
+      if (!app.editing || !app.item || app.item.status !== 'pending') return;
+      clearTimeout(app.draftTimer);
+      app.draftSaving = true;
+      updateDraftStatus();
+      try {
+        const data = await api(`/api/review/item/${app.item.id}/draft`, {
+          method: 'POST', body: JSON.stringify(workspacePayload())
+        });
+        app.summary = data.summary;
+        app.draftDirty = false;
+        app.item.has_draft = true;
+        app.item.workspace = clone(data.workspace);
+        renderQueue();
+        updateDraftStatus('草稿已保存');
+        if (showToast) toast('草稿已保存，切换图片后可继续');
+        return true;
+      } catch (error) {
+        updateDraftStatus('草稿保存失败');
+        if (showToast) toast(error.message, true);
+        return false;
+      } finally {
+        app.draftSaving = false;
+      }
+    }
+
+    async function flushDraft() {
+      if (!app.draftDirty) return true;
+      const saved = await saveDraft(false);
+      if (!saved) toast('草稿保存失败，已停止切换图片', true);
+      return saved;
+    }
+
+    async function discardDraft() {
+      if (!app.item) return setEditing(null);
+      clearTimeout(app.draftTimer);
+      try {
+        const data = await api(`/api/review/item/${app.item.id}/draft`, {method: 'DELETE'});
+        app.summary = data.summary;
+        app.item.has_draft = false;
+        app.item.workspace = null;
+        app.draftDirty = false;
+        setEditing(null);
+        renderQueue();
+        toast('已取消编辑并清除草稿');
+      } catch (error) { toast(error.message, true); }
+    }
+
+    function reviewedCount() {
+      if (!app.summary) return 0;
+      const c = app.summary.counts;
+      return (c.kept || 0) + (c.redrawn || 0) + (c.deleted || 0);
+    }
+
+    function renderProgress() {
+      if (!app.summary) return;
+      const done = reviewedCount();
+      const total = app.summary.total;
+      $('progressFill').style.width = `${total ? done / total * 100 : 0}%`;
+      $('progressText').textContent = `${done} / ${total} 已处理`;
+      $('undoGlobal').disabled = !app.summary.can_undo;
+    }
+
+    function filteredItems() {
+      if (!app.summary) return [];
+      if (app.filter === 'pending') return app.summary.items.filter(item => item.status === 'pending');
+      if (app.filter === 'done') return app.summary.items.filter(item => item.status !== 'pending');
+      return app.summary.items;
+    }
+
+    function renderQueue() {
+      const list = $('queueList');
+      list.innerHTML = '';
+      for (const item of filteredItems()) {
+        const button = document.createElement('button');
+        button.className = `queue-item${item.id === app.currentId ? ' active' : ''}${item.has_draft ? ' has-draft' : ''}`;
+        button.innerHTML = `<span class="status-dot ${item.status}"></span><span class="item-main">` +
+          `<span class="item-title">${item.stem}</span>` +
+          `<span class="item-code">${item.codes.map(c => codeText[c] || c).join(' · ')}</span></span>` +
+          `<span class="item-line">L${item.line}</span>`;
+        button.addEventListener('click', () => loadItem(item.id));
+        list.appendChild(button);
+      }
+      renderProgress();
+    }
+
+    async function loadSummary() {
+      app.summary = await api('/api/review/items');
+      renderQueue();
+      if (!app.currentId) {
+        const first = app.summary.items.find(item => item.status === 'pending') || app.summary.items[0];
+        if (first) await loadItem(first.id);
+      }
+    }
+
+    async function loadItem(itemId) {
+      if (itemId !== app.currentId && !(await flushDraft())) return;
+      setEditing(null);
+      app.currentId = itemId;
+      renderQueue();
+      $('emptyState').textContent = '正在加载图片';
+      $('emptyState').style.display = 'grid';
+      try {
+        const item = await api(`/api/review/item/${itemId}`);
+        const image = new Image();
+        image.src = `${item.image_url}?v=${Date.now()}`;
+        await image.decode();
+        app.item = item;
+        app.image = image;
+        updateInspector();
+        fitView();
+        if (item.workspace) setEditing(item.workspace.mode, item.workspace);
+        $('emptyState').style.display = 'none';
+      } catch (error) {
+        toast(error.message, true);
+        $('emptyState').textContent = error.message;
+      }
+    }
+
+    function updateInspector() {
+      const item = app.item;
+      $('itemTitle').textContent = item ? item.stem : '未选择';
+      $('itemSplit').textContent = item ? item.split : '-';
+      $('itemLine').textContent = item ? (item.target_line || `原 ${item.line}（已删除）`) : '-';
+      $('itemSource').textContent = item ? (item.source === 'sam2_new' ? 'SAM2 新标注' : '基础数据') : '-';
+      $('itemStatus').textContent = item ? statusText[item.status] : '-';
+      $('codeBadges').innerHTML = item ? item.codes.map(code => `<span class="badge">${codeText[code] || code}</span>`).join('') : '';
+      const unavailable = !item || !item.target_points.length || item.status !== 'pending';
+      const generalUnavailable = !item || item.status !== 'pending';
+      $('keepButton').disabled = generalUnavailable;
+      $('keepButton').textContent = item && item.status === 'pending' && !item.target_points.length
+        ? '恢复并保留' : '保留';
+      $('redrawButton').disabled = unavailable;
+      $('deleteButton').disabled = unavailable;
+      $('addButton').disabled = generalUnavailable;
+      $('deleteOtherButton').disabled = generalUnavailable || !item.polygons.some(polygon => !polygon.target);
+    }
+
+    function resizeCanvas() {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const width = Math.max(1, Math.round(rect.width * dpr));
+      const height = Math.max(1, Math.round(rect.height * dpr));
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+      }
+      draw();
+    }
+
+    function fitView() {
+      if (!app.image) return;
+      const rect = canvas.getBoundingClientRect();
+      app.scale = Math.min((rect.width - 28) / app.image.width, (rect.height - 28) / app.image.height);
+      app.offsetX = (rect.width - app.image.width * app.scale) / 2;
+      app.offsetY = (rect.height - app.image.height * app.scale) / 2;
+      draw();
+    }
+
+    function focusTarget() {
+      if (!app.item || !app.image) return;
+      const contours = app.item.target_contours || [app.item.target_points];
+      const points = contours.flat().filter(Boolean);
+      if (!points.length) return fitView();
+      const xs = points.map(point => point[0] * app.item.width);
+      const ys = points.map(point => point[1] * app.item.height);
+      const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+      const padding = 90;
+      const rect = canvas.getBoundingClientRect();
+      const boxWidth = Math.max(30, maxX - minX), boxHeight = Math.max(30, maxY - minY);
+      app.scale = Math.min(8, Math.max(.08, Math.min((rect.width - padding) / boxWidth, (rect.height - padding) / boxHeight)));
+      app.offsetX = rect.width / 2 - ((minX + maxX) / 2) * app.scale;
+      app.offsetY = rect.height / 2 - ((minY + maxY) / 2) * app.scale;
+      draw();
+    }
+
+    function pathPolygon(points) {
+      if (!points.length) return;
+      ctx.beginPath();
+      ctx.moveTo(points[0][0] * app.item.width, points[0][1] * app.item.height);
+      for (let i = 1; i < points.length; i++) ctx.lineTo(points[i][0] * app.item.width, points[i][1] * app.item.height);
+      ctx.closePath();
+    }
+
+    function draw() {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      if (!app.image || !app.item) return;
+      ctx.save();
+      ctx.translate(app.offsetX, app.offsetY);
+      ctx.scale(app.scale, app.scale);
+      ctx.drawImage(app.image, 0, 0, app.item.width, app.item.height);
+      ctx.lineJoin = 'round';
+      for (const polygon of app.item.polygons) {
+        if (polygon.target) continue;
+        pathPolygon(polygon.points);
+        const selected = polygon.hash === app.selectedHash;
+        if (selected) {
+          ctx.fillStyle = 'rgba(255, 211, 77, .28)';
+          ctx.fill();
+        }
+        ctx.strokeStyle = selected ? '#ffd34d' : 'rgba(70, 212, 176, .78)';
+        ctx.lineWidth = Math.max((selected ? 3 : 1.3) / app.scale, selected ? 1.1 : .7);
+        ctx.stroke();
+      }
+      for (const target of (app.item.target_contours || [app.item.target_points])) {
+        if (!target.length) continue;
+        pathPolygon(target);
+        ctx.fillStyle = 'rgba(255, 64, 52, .22)';
+        ctx.fill();
+        ctx.strokeStyle = '#ff4b3e';
+        ctx.lineWidth = Math.max(3 / app.scale, 1.1);
+        ctx.stroke();
+      }
+      if (app.editing) {
+        app.draftContours.forEach((contour, contourIndex) => {
+          pathPolygon(contour);
+          ctx.fillStyle = 'rgba(255, 211, 77, .18)';
+          ctx.fill();
+          ctx.strokeStyle = '#ffd34d';
+          ctx.lineWidth = Math.max(2.5 / app.scale, 1);
+          ctx.stroke();
+          contour.forEach((point, pointIndex) => {
+            const active = app.activeVertex && app.activeVertex.contour === contourIndex && app.activeVertex.point === pointIndex;
+            ctx.beginPath();
+            ctx.arc(point[0] * app.item.width, point[1] * app.item.height,
+              Math.max((active ? 6.5 : 4.2) / app.scale, active ? 2.2 : 1.7), 0, Math.PI * 2);
+            ctx.fillStyle = active ? '#ff8f3d' : '#ffd34d';
+            ctx.fill();
+            ctx.strokeStyle = '#3b2b00';
+            ctx.lineWidth = Math.max(1 / app.scale, .5);
+            ctx.stroke();
+          });
+        });
+      }
+      if (app.editing && app.draft.length) {
+        ctx.beginPath();
+        ctx.moveTo(app.draft[0][0] * app.item.width, app.draft[0][1] * app.item.height);
+        for (let i = 1; i < app.draft.length; i++) ctx.lineTo(app.draft[i][0] * app.item.width, app.draft[i][1] * app.item.height);
+        if (app.hover) ctx.lineTo(app.hover[0] * app.item.width, app.hover[1] * app.item.height);
+        ctx.strokeStyle = '#ffd34d';
+        ctx.lineWidth = Math.max(2.5 / app.scale, 1);
+        ctx.stroke();
+        for (const point of app.draft) {
+          ctx.beginPath();
+          ctx.arc(point[0] * app.item.width, point[1] * app.item.height, Math.max(4.2 / app.scale, 1.7), 0, Math.PI * 2);
+          ctx.fillStyle = '#ffd34d';
+          ctx.fill();
+          ctx.strokeStyle = '#3b2b00';
+          ctx.lineWidth = Math.max(1 / app.scale, .5);
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+      $('zoomValue').textContent = `${Math.round(app.scale * 100)}%`;
+    }
+
+    function canvasPoint(event) {
+      const rect = canvas.getBoundingClientRect();
+      const x = (event.clientX - rect.left - app.offsetX) / app.scale;
+      const y = (event.clientY - rect.top - app.offsetY) / app.scale;
+      return [Math.min(1, Math.max(0, x / app.item.width)), Math.min(1, Math.max(0, y / app.item.height))];
+    }
+
+    function setEditing(mode, workspace = null) {
+      app.editMode = mode;
+      app.editing = Boolean(mode);
+      app.selectedHash = workspace ? workspace.selected_hash : null;
+      app.draft = workspace ? clone(workspace.draft || []) : [];
+      app.draftContours = workspace ? clone(workspace.draft_contours || []) : [];
+      app.activeVertex = null;
+      app.dragVertex = null;
+      app.hover = null;
+      app.vertexTool = workspace ? workspace.vertex_tool || 'move' : 'move';
+      app.freehand = workspace ? Boolean(workspace.freehand) : false;
+      app.snap = workspace ? workspace.snap !== false : true;
+      app.editHistory = [];
+      app.editFuture = [];
+      app.draftDirty = false;
+      if (mode === 'redraw' && app.item && !workspace) {
+        app.draftContours = (app.item.target_contours || [app.item.target_points])
+          .filter(contour => contour && contour.length)
+          .map(contour => contour.map(point => point.slice()));
+      }
+      const drawing = mode === 'redraw' || mode === 'add';
+      canvas.classList.toggle('editing', Boolean(mode));
+      $('normalActions').style.display = mode ? 'none' : 'grid';
+      $('editActions').classList.toggle('visible', drawing);
+      $('deleteActions').classList.toggle('visible', mode === 'delete');
+      $('modeLabel').textContent = mode === 'redraw' ? '拖动黄色顶点调整；空白处点击可补点' :
+        mode === 'add' ? '点击添加轮廓点，双击完成' :
+        mode === 'delete' ? '点击绿色轮廓进行选择' : '拖动画布，滚轮缩放';
+      $('editModeTitle').textContent = mode === 'add' ? '补画新的独立轮廓' : '编辑当前异常轮廓';
+      updateDeleteSelection();
+      updateEditCount();
+      updateToolButtons();
+      updateDraftStatus(workspace ? '已恢复草稿' : '');
+      draw();
+      if (mode && !workspace) markDraftDirty();
+    }
+
+    function updateToolButtons() {
+      const vertexDisabled = app.editMode !== 'redraw' || app.freehand;
+      $('moveVertexTool').classList.toggle('active', app.vertexTool === 'move');
+      $('insertVertexTool').classList.toggle('active', app.vertexTool === 'insert');
+      $('deleteVertexTool').classList.toggle('active', app.vertexTool === 'delete');
+      $('moveVertexTool').disabled = vertexDisabled;
+      $('insertVertexTool').disabled = vertexDisabled;
+      $('deleteVertexTool').disabled = vertexDisabled;
+      $('freehandToggle').classList.toggle('active', app.freehand);
+      $('freehandToggle').textContent = `自由绘制：${app.freehand ? '开' : '关'}`;
+      $('snapToggle').classList.toggle('active', app.snap);
+      $('snapToggle').textContent = `自动吸附：${app.snap ? '开' : '关'}`;
+      $('undoPoint').disabled = !app.editHistory.length;
+      $('redoPoint').disabled = !app.editFuture.length;
+    }
+
+    function updateEditCount() {
+      const completed = app.draftContours.length;
+      $('editCount').textContent = `已完成 ${completed} 个轮廓 · 当前 ${app.draft.length} 个点`;
+      const currentValid = app.draft.length === 0 || app.draft.length >= 3;
+      const hasContour = completed > 0 || app.draft.length >= 3;
+      $('saveRedraw').disabled = !currentValid || !hasContour;
+      const verb = app.editMode === 'add' ? '新增' : '保存';
+      $('saveRedraw').textContent = `${verb} ${completed + (app.draft.length >= 3 ? 1 : 0)} 个轮廓`;
+      $('finishContour').disabled = app.draft.length < 3;
+      $('undoPoint').disabled = !app.editHistory.length;
+      $('redoPoint').disabled = !app.editFuture.length;
+      $('clearPoints').disabled = !app.draft.length && !app.draftContours.length;
+      $('clearPoints').textContent = app.editMode === 'redraw' ? '从空白重新绘制' : '全部清空';
+    }
+
+    function updateDeleteSelection() {
+      const polygon = app.item && app.item.polygons.find(value => value.hash === app.selectedHash);
+      $('deleteSelectionText').textContent = polygon
+        ? `已选择标签行 ${polygon.line}，点击确认后同步删除`
+        : '请在画面中点击一个绿色轮廓';
+      $('confirmDeleteSelected').disabled = !polygon;
+    }
+
+    function pointInPolygon(point, polygon) {
+      let inside = false;
+      for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const xi = polygon[i][0], yi = polygon[i][1];
+        const xj = polygon[j][0], yj = polygon[j][1];
+        const crosses = ((yi > point[1]) !== (yj > point[1])) &&
+          (point[0] < (xj - xi) * (point[1] - yi) / ((yj - yi) || Number.EPSILON) + xi);
+        if (crosses) inside = !inside;
+      }
+      return inside;
+    }
+
+    function selectPolygonAt(point) {
+      const matches = app.item.polygons
+        .filter(polygon => !polygon.target)
+        .map(polygon => ({polygon, inside: pointInPolygon(point, polygon.points), distance: distanceToPolygon(point, polygon.points)}))
+        .filter(value => value.inside || value.distance <= 12)
+        .sort((a, b) => Number(b.inside) - Number(a.inside) || a.distance - b.distance ||
+          Math.abs(polygonArea(a.polygon.points)) - Math.abs(polygonArea(b.polygon.points)));
+      if (!matches.length) {
+        app.selectedHash = null;
+        toast('附近没有可删除的绿色轮廓，请放大后再点', true);
+      } else {
+        app.selectedHash = matches[0].polygon.hash;
+      }
+      updateDeleteSelection();
+      draw();
+    }
+
+    function distanceToPolygon(point, polygon) {
+      let best = Infinity;
+      const px = point[0] * app.item.width * app.scale;
+      const py = point[1] * app.item.height * app.scale;
+      for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const ax = polygon[j][0] * app.item.width * app.scale;
+        const ay = polygon[j][1] * app.item.height * app.scale;
+        const bx = polygon[i][0] * app.item.width * app.scale;
+        const by = polygon[i][1] * app.item.height * app.scale;
+        const dx = bx - ax, dy = by - ay;
+        const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy || 1)));
+        best = Math.min(best, Math.hypot(px - (ax + t * dx), py - (ay + t * dy)));
+      }
+      return best;
+    }
+
+    function nearestDraftVertex(point, tolerance = 18) {
+      let best = null;
+      app.draftContours.forEach((contour, contourIndex) => contour.forEach((vertex, pointIndex) => {
+        const distance = Math.hypot(
+          (vertex[0] - point[0]) * app.item.width * app.scale,
+          (vertex[1] - point[1]) * app.item.height * app.scale
+        );
+        if (distance <= tolerance && (!best || distance < best.distance)) {
+          best = {contour: contourIndex, point: pointIndex, distance};
+        }
+      }));
+      return best;
+    }
+
+    function nearestDraftEdge(point, tolerance = 18) {
+      let best = null;
+      const px = point[0] * app.item.width * app.scale;
+      const py = point[1] * app.item.height * app.scale;
+      app.draftContours.forEach((contour, contourIndex) => {
+        for (let i = 0, j = contour.length - 1; i < contour.length; j = i++) {
+          const ax = contour[j][0] * app.item.width * app.scale;
+          const ay = contour[j][1] * app.item.height * app.scale;
+          const bx = contour[i][0] * app.item.width * app.scale;
+          const by = contour[i][1] * app.item.height * app.scale;
+          const dx = bx - ax, dy = by - ay;
+          const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy || 1)));
+          const sx = ax + t * dx, sy = ay + t * dy;
+          const distance = Math.hypot(px - sx, py - sy);
+          if (distance <= tolerance && (!best || distance < best.distance)) {
+            best = {
+              contour: contourIndex, beforePoint: i, distance,
+              point: [sx / (app.item.width * app.scale), sy / (app.item.height * app.scale)]
+            };
+          }
+        }
+      });
+      return best;
+    }
+
+    function snapPoint(point, tolerance = 12) {
+      if (!app.snap) return point;
+      let best = null;
+      const groups = [
+        ...(app.item ? app.item.polygons.map(polygon => polygon.points) : []),
+        ...app.draftContours
+      ];
+      groups.forEach(contour => contour.forEach(vertex => {
+        const distance = Math.hypot(
+          (vertex[0] - point[0]) * app.item.width * app.scale,
+          (vertex[1] - point[1]) * app.item.height * app.scale
+        );
+        if (distance <= tolerance && (!best || distance < best.distance)) best = {point: vertex, distance};
+      }));
+      return best ? best.point.slice() : point;
+    }
+
+    function polygonArea(points) {
+      let area = 0;
+      for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+        area += points[j][0] * points[i][1] - points[i][0] * points[j][1];
+      }
+      return area / 2;
+    }
+
+    function zoomAt(factor, clientX, clientY) {
+      if (!app.image) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+      const imageX = (x - app.offsetX) / app.scale;
+      const imageY = (y - app.offsetY) / app.scale;
+      const next = Math.min(8, Math.max(.08, app.scale * factor));
+      app.offsetX = x - imageX * next;
+      app.offsetY = y - imageY * next;
+      app.scale = next;
+      draw();
+    }
+
+    async function submitAction(action, payload = {}) {
+      if (!app.item) return;
+      clearTimeout(app.draftTimer);
+      document.body.classList.add('loading');
+      try {
+        const data = await api(`/api/review/item/${app.item.id}/action`, {
+          method: 'POST', body: JSON.stringify({action, ...payload})
+        });
+        app.summary = data.summary;
+        app.item = data.item;
+        const messages = {
+          kept: '已标记保留', deleted: '已删除异常轮廓并同步源标签', redrawn: '已保存重画轮廓',
+          added: '已新增轮廓并同步源标签', deleted_selected: '已删除所选轮廓并同步源标签'
+        };
+        toast(messages[action] || '操作已保存');
+        app.draftDirty = false;
+        setEditing(null);
+        renderQueue();
+        if (action === 'added' || action === 'deleted_selected') {
+          await loadItem(app.item.id);
+        } else {
+          const next = app.summary.items.find(item => item.status === 'pending');
+          if (next) await loadItem(next.id); else await loadItem(app.item.id);
+        }
+      } catch (error) {
+        toast(error.message, true);
+        if (app.editing) markDraftDirty();
+      } finally {
+        document.body.classList.remove('loading');
+      }
+    }
+
+    canvas.addEventListener('pointerdown', (event) => {
+      if (!app.item) return;
+      if (app.spaceDown || event.button === 1) {
+        event.preventDefault();
+        app.dragging = true;
+        app.dragX = event.clientX;
+        app.dragY = event.clientY;
+        canvas.setPointerCapture(event.pointerId);
+        canvas.style.cursor = 'grabbing';
+        return;
+      }
+      if (app.editMode === 'redraw' || app.editMode === 'add') {
+        if (event.detail > 1) return;
+        const point = canvasPoint(event);
+        if (app.freehand && event.button === 0) {
+          recordEditSnapshot();
+          app.freehandDrawing = true;
+          app.draft = [point];
+          canvas.setPointerCapture(event.pointerId);
+          updateEditCount(); draw(); markDraftDirty();
+          return;
+        }
+        if (app.editMode === 'redraw' && app.draftContours.length) {
+          if (app.vertexTool === 'insert') {
+            const edge = nearestDraftEdge(point);
+            if (!edge) return toast('请点击黄色轮廓边线以插入顶点', true);
+            recordEditSnapshot();
+            app.draftContours[edge.contour].splice(edge.beforePoint, 0, edge.point);
+            app.activeVertex = {contour: edge.contour, point: edge.beforePoint};
+            updateEditCount(); draw(); markDraftDirty();
+            return;
+          }
+          const vertex = nearestDraftVertex(point);
+          if (!vertex) return toast('请点击黄色顶点；需要加点时先切换“插入点”', true);
+          app.activeVertex = {contour: vertex.contour, point: vertex.point};
+          if (app.vertexTool === 'delete') {
+            const contour = app.draftContours[vertex.contour];
+            if (contour.length <= 3) return toast('轮廓至少需要保留 3 个点', true);
+            recordEditSnapshot();
+            contour.splice(vertex.point, 1);
+            app.activeVertex = null;
+            updateEditCount(); draw(); markDraftDirty();
+            return;
+          }
+          recordEditSnapshot();
+          app.dragVertex = {...app.activeVertex};
+          canvas.setPointerCapture(event.pointerId);
+        } else {
+          recordEditSnapshot();
+          app.activeVertex = null;
+          app.draft.push(snapPoint(point));
+        }
+        updateEditCount();
+        draw();
+        markDraftDirty();
+        return;
+      }
+      if (app.editMode === 'delete') {
+        selectPolygonAt(canvasPoint(event));
+        return;
+      }
+      app.dragging = true;
+      app.dragX = event.clientX;
+      app.dragY = event.clientY;
+      canvas.setPointerCapture(event.pointerId);
+      canvas.style.cursor = 'grabbing';
+    });
+    canvas.addEventListener('pointermove', (event) => {
+      if (app.freehandDrawing && app.item) {
+        const point = canvasPoint(event);
+        const last = app.draft[app.draft.length - 1];
+        const distance = Math.hypot(
+          (point[0] - last[0]) * app.item.width * app.scale,
+          (point[1] - last[1]) * app.item.height * app.scale
+        );
+        if (distance >= 5 && app.draft.length < 200) {
+          app.draft.push(point);
+          updateEditCount(); draw(); markDraftDirty();
+        }
+      } else if (app.dragVertex && app.item) {
+        app.draftContours[app.dragVertex.contour][app.dragVertex.point] = canvasPoint(event);
+        updateEditCount();
+        draw();
+        markDraftDirty();
+      } else if ((app.editMode === 'redraw' || app.editMode === 'add') && app.item && !app.dragging) {
+        app.hover = canvasPoint(event);
+        draw();
+      } else if (app.dragging) {
+        app.offsetX += event.clientX - app.dragX;
+        app.offsetY += event.clientY - app.dragY;
+        app.dragX = event.clientX;
+        app.dragY = event.clientY;
+        draw();
+      }
+    });
+    canvas.addEventListener('pointerup', (event) => {
+      app.dragging = false;
+      if (app.freehandDrawing) {
+        app.freehandDrawing = false;
+        if (app.draft.length >= 3) finishDraftContour(false);
+        else { app.draft = []; updateEditCount(); draw(); }
+      }
+      app.dragVertex = null;
+      canvas.style.cursor = app.editing ? 'crosshair' : 'grab';
+      if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+    });
+    canvas.addEventListener('pointerleave', () => { if (app.editing) { app.hover = null; draw(); } });
+    canvas.addEventListener('wheel', (event) => {
+      event.preventDefault();
+      zoomAt(event.deltaY < 0 ? 1.14 : .88, event.clientX, event.clientY);
+    }, {passive: false});
+    canvas.addEventListener('dblclick', (event) => {
+      if (app.editMode === 'redraw' || app.editMode === 'add') {
+        event.preventDefault();
+        finishDraftContour();
+      }
+    });
+    canvas.addEventListener('contextmenu', (event) => {
+      event.preventDefault();
+      if (app.editMode === 'redraw' || app.editMode === 'add') undoDraftPoint();
+    });
+
+    $('zoomIn').addEventListener('click', () => {
+      const rect = canvas.getBoundingClientRect(); zoomAt(1.2, rect.left + rect.width / 2, rect.top + rect.height / 2);
+    });
+    $('zoomOut').addEventListener('click', () => {
+      const rect = canvas.getBoundingClientRect(); zoomAt(.82, rect.left + rect.width / 2, rect.top + rect.height / 2);
+    });
+    $('fitView').addEventListener('click', fitView);
+    $('focusTarget').addEventListener('click', focusTarget);
+    function adjacentItem(direction) {
+      if (!app.summary || !app.currentId) return;
+      const items = app.summary.items;
+      const index = items.findIndex(item => item.id === app.currentId);
+      if (index < 0) return;
+      const next = items[index + direction];
+      if (next) loadItem(next.id);
+    }
+    $('previousItem').addEventListener('click', () => adjacentItem(-1));
+    $('nextItem').addEventListener('click', () => adjacentItem(1));
+    $('keepButton').addEventListener('click', () => submitAction('kept'));
+    $('redrawButton').addEventListener('click', () => setEditing('redraw'));
+    $('addButton').addEventListener('click', () => setEditing('add'));
+    $('deleteOtherButton').addEventListener('click', () => setEditing('delete'));
+    function setVertexTool(tool) {
+      if (app.editMode !== 'redraw' || app.freehand) return;
+      app.vertexTool = tool;
+      app.activeVertex = null;
+      updateToolButtons();
+      $('modeLabel').textContent = tool === 'move' ? '拖动黄色顶点移动位置' :
+        tool === 'insert' ? '点击黄色边线插入顶点' : '点击黄色顶点直接删除';
+      markDraftDirty();
+    }
+    $('moveVertexTool').addEventListener('click', () => setVertexTool('move'));
+    $('insertVertexTool').addEventListener('click', () => setVertexTool('insert'));
+    $('deleteVertexTool').addEventListener('click', () => setVertexTool('delete'));
+    $('freehandToggle').addEventListener('click', () => {
+      const enabling = !app.freehand;
+      if (enabling && app.editMode === 'redraw' && app.draftContours.length) {
+        if (!confirm('开启自由重画会清空当前黄色轮廓，确认从空白开始？')) return;
+        recordEditSnapshot();
+        app.draftContours = [];
+        app.draft = [];
+      }
+      app.freehand = enabling;
+      updateToolButtons();
+      $('modeLabel').textContent = app.freehand ? '按住左键沿边界连续绘制，松开自动闭合' : '点击添加轮廓点，双击完成';
+      markDraftDirty();
+    });
+    $('snapToggle').addEventListener('click', () => {
+      app.snap = !app.snap;
+      updateToolButtons();
+      markDraftDirty();
+    });
+    $('deleteButton').addEventListener('click', () => {
+      if (confirm(`确认删除 ${app.item.stem} 的当前异常轮廓？该操作会同步到规范源标签。`)) submitAction('deleted');
+    });
+    $('confirmDeleteSelected').addEventListener('click', () => {
+      if (!app.selectedHash) return;
+      if (confirm('确认删除所选绿色轮廓？该操作会同步到规范源标签。')) {
+        submitAction('deleted_selected', {polygon_hashes: [app.selectedHash]});
+      }
+    });
+    $('cancelDeleteSelected').addEventListener('click', () => setEditing(null));
+    function undoDraftPoint() {
+      if (!app.editHistory.length) return;
+      app.editFuture.push(editSnapshot());
+      restoreEditSnapshot(app.editHistory.pop());
+    }
+    function redoDraftEdit() {
+      if (!app.editFuture.length) return;
+      app.editHistory.push(editSnapshot());
+      restoreEditSnapshot(app.editFuture.pop());
+    }
+    function finishDraftContour(record = true) {
+      if (app.draft.length < 3) return toast('当前轮廓至少需要 3 个点', true);
+      if (record) recordEditSnapshot();
+      app.draftContours.push(app.draft.slice());
+      app.draft = [];
+      app.activeVertex = null;
+      app.hover = null;
+      updateEditCount();
+      draw();
+      markDraftDirty();
+    }
+    function deleteActiveVertex() {
+      if (!app.activeVertex) return;
+      const contour = app.draftContours[app.activeVertex.contour];
+      if (!contour || contour.length <= 3) return toast('轮廓至少需要保留 3 个点', true);
+      recordEditSnapshot();
+      contour.splice(app.activeVertex.point, 1);
+      app.activeVertex = null;
+      updateEditCount();
+      draw();
+      markDraftDirty();
+    }
+    $('undoPoint').addEventListener('click', undoDraftPoint);
+    $('redoPoint').addEventListener('click', redoDraftEdit);
+    $('finishContour').addEventListener('click', finishDraftContour);
+    $('clearPoints').addEventListener('click', () => {
+      if ((app.draft.length || app.draftContours.length) && !confirm('确认清空当前未保存的绘制内容？')) return;
+      recordEditSnapshot();
+      app.draft = [];
+      app.draftContours = [];
+      app.activeVertex = null;
+      updateEditCount();
+      draw();
+      markDraftDirty();
+    });
+    $('saveDraftButton').addEventListener('click', () => saveDraft(true));
+    $('cancelRedraw').addEventListener('click', discardDraft);
+    $('saveRedraw').addEventListener('click', () => {
+      if (app.draft.length > 0 && app.draft.length < 3) return toast('当前未完成的轮廓少于 3 个点', true);
+      const contours = app.draftContours.map(contour => contour.slice());
+      if (app.draft.length >= 3) contours.push(app.draft.slice());
+      if (!contours.length) return toast('至少需要一个轮廓', true);
+      submitAction(app.editMode === 'add' ? 'added' : 'redrawn', {contours, class_id: '0'});
+    });
+    $('undoGlobal').addEventListener('click', async () => {
+      try {
+        const data = await api('/api/review/undo', {method: 'POST', body: '{}'});
+        app.summary = {items: data.items, counts: data.counts, total: data.total, drafts: data.drafts, can_undo: data.can_undo};
+        renderQueue();
+        await loadItem(data.item_id);
+        toast('已撤销上次操作');
+      } catch (error) { toast(error.message, true); }
+    });
+    document.querySelectorAll('[data-filter]').forEach(button => button.addEventListener('click', () => {
+      app.filter = button.dataset.filter;
+      document.querySelectorAll('[data-filter]').forEach(node => node.classList.toggle('active', node === button));
+      renderQueue();
+    }));
+    function setShortcutDialog(open) {
+      $('shortcutDialog').hidden = !open;
+      if (open) $('shortcutClose').focus();
+    }
+    function isTypingTarget(target) {
+      return target instanceof HTMLElement &&
+        (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
+    }
+    $('shortcutButton').addEventListener('click', () => setShortcutDialog(true));
+    $('shortcutClose').addEventListener('click', () => setShortcutDialog(false));
+    $('shortcutDialog').addEventListener('click', event => {
+      if (event.target === $('shortcutDialog')) setShortcutDialog(false);
+    });
+    new ResizeObserver(resizeCanvas).observe($('canvasWrap'));
+    window.addEventListener('keydown', (event) => {
+      if (isTypingTarget(event.target) || event.repeat || document.body.classList.contains('loading')) return;
+      const key = event.key.toLowerCase();
+      const commandKey = event.ctrlKey || event.metaKey;
+      if (event.key === '?' || (event.code === 'Slash' && event.shiftKey)) {
+        event.preventDefault();
+        setShortcutDialog($('shortcutDialog').hidden);
+        return;
+      }
+      if (!$('shortcutDialog').hidden) {
+        if (event.key === 'Escape') { event.preventDefault(); setShortcutDialog(false); }
+        return;
+      }
+      if (event.code === 'Space' && app.editing) {
+        event.preventDefault();
+        app.spaceDown = true;
+        canvas.style.cursor = 'grab';
+        return;
+      }
+      if (commandKey && key === 'z') {
+        event.preventDefault();
+        if (app.editMode === 'redraw' || app.editMode === 'add') {
+          if (event.shiftKey) redoDraftEdit(); else undoDraftPoint();
+        } else if (!event.shiftKey && !$('undoGlobal').disabled) $('undoGlobal').click();
+        return;
+      }
+      if (commandKey && key === 'y' && (app.editMode === 'redraw' || app.editMode === 'add')) {
+        event.preventDefault(); redoDraftEdit(); return;
+      }
+      if (commandKey && key === 's' && (app.editMode === 'redraw' || app.editMode === 'add')) {
+        event.preventDefault(); $('saveRedraw').click(); return;
+      }
+      if (commandKey || event.altKey) return;
+      if (event.key === '[') { event.preventDefault(); adjacentItem(-1); return; }
+      if (event.key === ']') { event.preventDefault(); adjacentItem(1); return; }
+      if (key === '0') { event.preventDefault(); fitView(); return; }
+      if (key === 'l') { event.preventDefault(); focusTarget(); return; }
+      if (!app.editing && key === 'k') { event.preventDefault(); $('keepButton').click(); return; }
+      if (!app.editing && key === 'e') { event.preventDefault(); $('redrawButton').click(); return; }
+      if (!app.editing && key === 'a') { event.preventDefault(); $('addButton').click(); return; }
+      if (!app.editing && key === 'x') { event.preventDefault(); $('deleteButton').click(); return; }
+      if ((app.editMode === 'redraw' || app.editMode === 'add') && key === 'f') {
+        event.preventDefault(); $('freehandToggle').click(); return;
+      }
+      if ((app.editMode === 'redraw' || app.editMode === 'add') && key === 's') {
+        event.preventDefault(); $('snapToggle').click(); return;
+      }
+      if (app.editMode === 'redraw' && ['m', 'i', 'd'].includes(key)) {
+        event.preventDefault();
+        setVertexTool({m: 'move', i: 'insert', d: 'delete'}[key]);
+        return;
+      }
+      if (event.key === 'Escape' && app.editing) { event.preventDefault(); discardDraft(); return; }
+      if (event.key === 'Enter' && (app.editMode === 'redraw' || app.editMode === 'add')) {
+        event.preventDefault(); finishDraftContour();
+      }
+      if (event.key === 'Delete' && app.activeVertex) {
+        event.preventDefault(); deleteActiveVertex();
+      }
+    });
+    window.addEventListener('keyup', (event) => {
+      if (event.code === 'Space') {
+        app.spaceDown = false;
+        canvas.style.cursor = app.editing ? 'crosshair' : 'grab';
+      }
+    });
+    window.addEventListener('pagehide', () => {
+      if (app.draftDirty && app.item && app.editing) {
+        fetch(`/api/review/item/${app.item.id}/draft`, {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(workspacePayload()), keepalive: true
+        });
+      }
+    });
+    loadSummary().catch(error => { $('emptyState').textContent = error.message; toast(error.message, true); });
+  </script>
+</body>
+</html>
