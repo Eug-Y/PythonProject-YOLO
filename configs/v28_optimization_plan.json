@@ -1,0 +1,48 @@
+{
+  "version": "v28_optimization_plan_v1",
+  "state": "active",
+  "started_at": "2026-08-21T20:55:54+08:00",
+  "production_baseline": "v27_yolo11_primary_fusion_v1",
+  "production_protection": {
+    "deployment_config_frozen": true,
+    "rollback_config_frozen": true,
+    "production_service_must_not_use_v28_candidates": true
+  },
+  "data_policy": {
+    "allowed_for_optimization": [
+      "datasets/Data_v3/train",
+      "datasets/Data_v3/valid"
+    ],
+    "forbidden_for_optimization": [
+      "datasets/Data_release_blind_v1",
+      "datasets/Data_v3/test"
+    ],
+    "sealed_blind_result_may_not_be_used_for_tuning": true,
+    "new_blind_evaluation_limit": 1
+  },
+  "architecture_policy": {
+    "required_primary": "YOLO11",
+    "allowed_auxiliary": "YOLOv8",
+    "fusion_weights": [1.0, 1.0],
+    "every_output_requires_yolo11": true
+  },
+  "workstreams": [
+    "runtime_latency",
+    "yolo11_precision_hard_negatives",
+    "weed_candidate_review_feedback",
+    "locked_valid_evaluation",
+    "new_sealed_blind_gate"
+  ],
+  "runtime_targets": {
+    "all_mode_seconds_per_image_max": 8.0,
+    "measurement_split": "datasets/Data_v3/valid"
+  },
+  "promotion_gates_relative_to_v27": {
+    "f1_delta_min": 0.015,
+    "precision_delta_min": 0.0,
+    "recall_delta_min": -0.01,
+    "mean_matched_iou_delta_min": -0.005,
+    "every_output_requires_yolo11": true,
+    "rollback_required": true
+  }
+}

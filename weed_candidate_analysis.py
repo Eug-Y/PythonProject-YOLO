@@ -118,6 +118,19 @@ def _line_kernel(length: int, angle_deg: float, thickness: int = 3) -> np.ndarra
     return kernel
 
 
+def _component_coordinates(
+    labels: np.ndarray, stats: np.ndarray, label: int,
+) -> tuple[int, int, np.ndarray, np.ndarray, np.ndarray]:
+    """Return component coordinates by scanning only its bounding-box ROI."""
+    left = int(stats[label, cv2.CC_STAT_LEFT])
+    top = int(stats[label, cv2.CC_STAT_TOP])
+    width = int(stats[label, cv2.CC_STAT_WIDTH])
+    height = int(stats[label, cv2.CC_STAT_HEIGHT])
+    local_mask = labels[top:top + height, left:left + width] == label
+    local_rows, local_columns = np.nonzero(local_mask)
+    return top, left, local_mask, local_rows + top, local_columns + left
+
+
 def build_crop_row_corridors(mask: np.ndarray, angle_deg: float) -> tuple[np.ndarray, np.ndarray, int]:
     height, width = mask.shape
     line_length = max(15, round(min(height, width) * 0.045)) | 1
@@ -136,10 +149,14 @@ def build_crop_row_corridors(mask: np.ndarray, angle_deg: float) -> tuple[np.nda
     for label in range(1, core_count):
         if int(core_stats[label, cv2.CC_STAT_AREA]) < line_length:
             continue
-        rows, columns = np.nonzero(core_labels == label)
+        _top, _left, _local_mask, rows, columns = _component_coordinates(core_labels, core_stats, label)
         projection = np.column_stack((columns, rows)) @ direction
         if float(projection.max() - projection.min()) >= minimum_span:
-            filtered_core[core_labels == label] = 1
+            top = int(core_stats[label, cv2.CC_STAT_TOP])
+            left = int(core_stats[label, cv2.CC_STAT_LEFT])
+            width = int(core_stats[label, cv2.CC_STAT_WIDTH])
+            height = int(core_stats[label, cv2.CC_STAT_HEIGHT])
+            filtered_core[top:top + height, left:left + width][_local_mask] = 1
     row_core = filtered_core
     radius = max(2, round(line_length * 0.12))
     band_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (radius * 2 + 1, radius * 2 + 1))
@@ -158,14 +175,29 @@ def _component_shape_score(columns: np.ndarray, rows: np.ndarray) -> float:
 
 
 def _robust_novelty(value: float, baseline: list[float], *, high_only: bool = False) -> float:
+    reference = _robust_reference(baseline)
+    return _robust_novelty_from_reference(value, reference, high_only=high_only)
+
+
+def _robust_reference(baseline: list[float]) -> tuple[float, float] | None:
     if len(baseline) < 3:
+        return None
+    values = np.asarray(baseline)
+    median = float(np.median(values))
+    mad = float(np.median(np.abs(values - median)))
+    return median, max(3.0 * 1.4826 * mad, 1e-4)
+
+
+def _robust_novelty_from_reference(
+    value: float, reference: tuple[float, float] | None, *, high_only: bool = False,
+) -> float:
+    if reference is None:
         return 0.0
-    median = float(np.median(baseline))
-    mad = float(np.median(np.abs(np.asarray(baseline) - median)))
+    median, scale = reference
     delta = value - median if high_only else abs(value - median)
     if high_only:
         delta = max(delta, 0.0)
-    return float(np.clip(delta / max(3.0 * 1.4826 * mad, 1e-4), 0.0, 1.0))
+    return float(np.clip(delta / scale, 0.0, 1.0))
 
 
 def analyze_weed_candidates(
@@ -200,10 +232,16 @@ def analyze_weed_candidates(
         area = int(stats[label, cv2.CC_STAT_AREA])
         if area < minimum_pixels:
             continue
-        rows, columns = np.nonzero(labels == label)
+        top, left, _local_mask, rows, columns = _component_coordinates(labels, stats, label)
         off_fraction = float(np.mean(~row_corridors[rows, columns]))
         components.append({
             "label": label,
+            "bbox": (
+                left,
+                top,
+                int(stats[label, cv2.CC_STAT_WIDTH]),
+                int(stats[label, cv2.CC_STAT_HEIGHT]),
+            ),
             "area_pixels": area,
             "off_row_fraction": off_fraction,
             "ndre_mean": float(np.mean(ndre_layer[rows, columns])),
@@ -214,13 +252,17 @@ def analyze_weed_candidates(
     baseline = [item for item in components if item["off_row_fraction"] <= 0.2]
     ndre_baseline = [float(item["ndre_mean"]) for item in baseline]
     texture_baseline = [float(item["texture_mean"]) for item in baseline]
+    ndre_reference = _robust_reference(ndre_baseline)
+    texture_reference = _robust_reference(texture_baseline)
     candidate_mask = np.zeros((height, width), dtype=bool)
     off_row_count = in_row_count = 0
     candidate_rows: list[dict[str, Any]] = []
     for item in components:
         off = float(item["off_row_fraction"])
-        spectral = _robust_novelty(float(item["ndre_mean"]), ndre_baseline)
-        texture_score = _robust_novelty(float(item["texture_mean"]), texture_baseline, high_only=True)
+        spectral = _robust_novelty_from_reference(float(item["ndre_mean"]), ndre_reference)
+        texture_score = _robust_novelty_from_reference(
+            float(item["texture_mean"]), texture_reference, high_only=True,
+        )
         shape = float(item["shape_score"])
         in_row_risk = 0.4 * spectral + 0.3 * texture_score + 0.3 * shape
         risk = 0.65 * off + 0.15 * spectral + 0.1 * texture_score + 0.1 * shape
@@ -228,8 +270,10 @@ def analyze_weed_candidates(
         is_in_row_suspect = off < 0.45 and in_row_risk >= 0.72 and orientation_confidence >= 0.25
         if not (is_off_row or is_in_row_suspect):
             continue
-        selected = labels == int(item["label"])
-        candidate_mask |= selected
+        left, top, component_width, component_height = item["bbox"]
+        component_roi = labels[top:top + component_height, left:left + component_width] == int(item["label"])
+        candidate_roi = candidate_mask[top:top + component_height, left:left + component_width]
+        candidate_roi |= component_roi
         off_row_count += int(is_off_row)
         in_row_count += int(is_in_row_suspect)
         candidate_rows.append({

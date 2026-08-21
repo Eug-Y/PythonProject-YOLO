@@ -1,0 +1,22 @@
+{
+  "version": "v28_training_runtime_intervention_v1",
+  "recorded_at": "2026-08-21T21:36:00+08:00",
+  "state": "applied_before_formal_candidate_completion",
+  "abandoned_run": "v28_yolo11_hard_examples_b1_seed0_v1",
+  "abandoned_completed_epochs": 1,
+  "observed": {
+    "batch": 2,
+    "dedicated_gpu_memory_mib": 6144,
+    "reported_training_gpu_memory_gib": 9.84,
+    "failure_mode": "dense Mosaic batch spilled into shared GPU memory and slowed from about 40 seconds per epoch to multiple minutes"
+  },
+  "replacement_run": "v28_yolo11_hard_examples_batch1_seed0_v2",
+  "replacement_batch": 1,
+  "imgsz": 1024,
+  "epochs": 60,
+  "effective_batch_control": "Ultralytics nbs=64 gradient accumulation",
+  "data_or_model_selection_changed": false,
+  "held_out_test_used": false,
+  "sealed_blind_used": false,
+  "deployment_changed": false
+}

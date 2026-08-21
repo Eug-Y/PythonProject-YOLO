@@ -14,6 +14,7 @@ from web_viewer import (
     compute_web_indices,
     discover_models,
     make_index_heatmap,
+    make_thermal_view,
 )
 
 
@@ -47,6 +48,15 @@ class WebSpectralLayerTest(unittest.TestCase):
     def test_missing_required_band_returns_no_partial_layers(self) -> None:
         with patch("web_viewer._load_tif", return_value=None):
             self.assertEqual(compute_web_indices(self.img_num, 2, 3, ("NDVI",)), {})
+
+    def test_request_band_cache_reuses_nir_for_thermal_layer(self) -> None:
+        cache = {}
+        with patch("web_viewer._load_tif", side_effect=lambda number: self.raw.get(number)) as loader:
+            actual = compute_web_indices(self.img_num, 2, 3, ("NDVI", "NDRE", "ExG"), band_cache=cache)
+            thermal = make_thermal_view(self.img_num, 2, 3, nir=cache["nir"])
+        self.assertEqual(set(actual), {"NDVI", "NDRE", "ExG"})
+        self.assertEqual(loader.call_count, 5)
+        self.assertEqual(thermal.shape, (42, 3, 3))
 
     def test_heatmap_contract(self) -> None:
         values = np.linspace(0.0, 1.0, 120, dtype=np.float32).reshape(10, 12)

@@ -1,0 +1,8 @@
+# data_v28_yolo11_hard_examples_train_v1; test and sealed blind data are not exposed.
+path: D:/PythonProject-YOLO/datasets/Data_v28_yolo11_hard_examples_train
+train: train/images
+val: D:/PythonProject-YOLO/datasets/Data_v3/valid/images
+
+nc: 1
+names: ['land']
+channels: 5

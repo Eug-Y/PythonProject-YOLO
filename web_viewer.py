@@ -315,9 +315,10 @@ def _load_tif(num):
     return band.astype(np.float32).squeeze()
 
 
-def make_thermal_view(img_num, h, w):
+def make_thermal_view(img_num, h, w, nir=None):
     """NIR 近红外视图：NIR 波段 + INFERNO 热力色映射"""
-    nir = _load_tif(img_num + 5)
+    if nir is None:
+        nir = _load_tif(img_num + 5)
     if nir is None:
         return None
     if nir.shape[:2] != (h, w):
@@ -350,16 +351,20 @@ def compute_ndvi(img_num, h, w):
 _WEB_BAND_OFFSETS = {"blue": 1, "green": 2, "red": 3, "rededge": 4, "nir": 5}
 
 
-def compute_web_indices(img_num, h, w, names=WEB_INDEX_NAMES):
+def compute_web_indices(img_num, h, w, names=WEB_INDEX_NAMES, band_cache=None):
     """Load P4M bands once and compute encoded web layers via spectral_indices.py."""
     names = tuple(names)
     bands = {}
     for band_name in required_bands(names):
-        band = _load_tif(img_num + _WEB_BAND_OFFSETS[band_name])
+        band = band_cache.get(band_name) if band_cache is not None else None
+        if band is None:
+            band = _load_tif(img_num + _WEB_BAND_OFFSETS[band_name])
         if band is None:
             return {}
         if band.shape[:2] != (h, w):
             band = cv2.resize(band, (w, h), interpolation=cv2.INTER_LINEAR)
+        if band_cache is not None:
+            band_cache[band_name] = band
         bands[band_name] = normalize_dn(band)
     return compute_indices(list(names), bands, encoded=True)
 
@@ -811,12 +816,11 @@ def process_one_image_file(file, mode, min_field_mu, gsd, model_name=None, yolo_
 
     ndvi = ndre = None
     spectral_layers = {}
+    raw_band_cache = {}
     if img_num is not None:
         _t2 = time.time()
-        requested_indices = WEB_INDEX_NAMES + (
-            ("ExG", "MCARI", "NDVI_STD5") if mode in ("weed", "all") else ()
-        )
-        spectral_layers = compute_web_indices(img_num, h, w, requested_indices)
+        requested_indices = WEB_INDEX_NAMES + (("ExG",) if mode in ("weed", "all") else ())
+        spectral_layers = compute_web_indices(img_num, h, w, requested_indices, band_cache=raw_band_cache)
         ndvi = spectral_layers.get("NDVI")
         ndre = spectral_layers.get("NDRE")
         # 后备：TIF不存在时尝试加载 _5ch.npy
@@ -913,7 +917,7 @@ def process_one_image_file(file, mode, min_field_mu, gsd, model_name=None, yolo_
     # === 热红外（NIR 波段） ===
     if img_num is not None:
         _t_thermal = time.time()
-        thermal_img = make_thermal_view(img_num, h, w)
+        thermal_img = make_thermal_view(img_num, h, w, nir=raw_band_cache.get("nir"))
         if thermal_img is not None:
             images["thermal"] = img_to_b64_png(thermal_img)
         print(f"  [计时] NIR近红外: {time.time()-_t_thermal:.1f}s")
@@ -929,11 +933,11 @@ def process_one_image_file(file, mode, min_field_mu, gsd, model_name=None, yolo_
                     images["yolo"] = img_to_b64_png(overlay)
                     results["yolo_model"] = used_model
                     results["yolo_detections"] = box_count
-                    # 同时保存到磁盘方便对比
-                    _debug_dir = PROJECT_ROOT
-                    cv2.imwrite(str(_debug_dir / f"debug_web_{file.filename.rsplit('.',1)[0]}_yolo.png"),
-                                cv2.cvtColor(overlay, cv2.COLOR_RGB2BGR))
-                    print(f"  [调试] 已保存 debug_web_{file.filename.rsplit('.',1)[0]}_yolo.png")
+                    if os.environ.get("YOLO_WEB_DEBUG_OUTPUT") == "1":
+                        _debug_dir = PROJECT_ROOT
+                        cv2.imwrite(str(_debug_dir / f"debug_web_{file.filename.rsplit('.',1)[0]}_yolo.png"),
+                                    cv2.cvtColor(overlay, cv2.COLOR_RGB2BGR))
+                        print(f"  [调试] 已保存 debug_web_{file.filename.rsplit('.',1)[0]}_yolo.png")
                 else:
                     results["yolo_error"] = used_model or "加载失败"
             except Exception as e:
