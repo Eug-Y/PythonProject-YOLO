@@ -1,0 +1,424 @@
+{
+  "version": "data_v30_label_density_dataset_audit_v1",
+  "created_at": "2026-09-18T00:08:26+08:00",
+  "dataset_root": "D:\\PythonProject-YOLO\\datasets\\Data_v3",
+  "splits": [
+    "train",
+    "valid"
+  ],
+  "held_out_test_used": false,
+  "sealed_blind_used": false,
+  "policy": "train and valid only; the frozen test split and the release blind holdout are never opened",
+  "inputs": {
+    "sam2_label_dir": "D:\\PythonProject-YOLO\\待标注_100张\\labels",
+    "sam2_stems": 100,
+    "label_set_sha256": {
+      "train": "4b4a36c132f5d9451542776bea200747836edaee59060626e2f69063be58a54a",
+      "valid": "af349199dc732cb626861d10f7c4c5415bca5cca51a09bd7c5809d822c5a03e5"
+    }
+  },
+  "grid": {
+    "width": 640,
+    "height": 480
+  },
+  "per_split": {
+    "train": {
+      "batches": {
+        "base": {
+          "images": 140,
+          "polygons_total": 5415,
+          "polygons_per_image_mean": 38.67857142857143,
+          "polygons_per_image_median": 41.0,
+          "polygons_per_image_max": 68,
+          "median_radius": 36.03940450234141,
+          "overlap_share_mean": 0.11304241341696851,
+          "tiling_share_mean": 0.16487277596264,
+          "union_over_sum_mean": 0.8509789899220319,
+          "max_iou_mean": 0.43456746002785024
+        },
+        "sam2_new": {
+          "images": 70,
+          "polygons_total": 5709,
+          "polygons_per_image_mean": 81.55714285714286,
+          "polygons_per_image_median": 80.5,
+          "polygons_per_image_max": 140,
+          "median_radius": 23.537506888968096,
+          "overlap_share_mean": 0.09329157093169854,
+          "tiling_share_mean": 0.11164801697721126,
+          "union_over_sum_mean": 0.9205292729547648,
+          "max_iou_mean": 0.6050519606154043
+        }
+      },
+      "decision": {
+        "polygon_ratio": 1.9634146341463414,
+        "indicators": {
+          "A1_overlap": false,
+          "A2_tiling": false,
+          "A3_fragmentation": false
+        },
+        "indicators_fired": 0,
+        "decision": "real_density",
+        "thresholds": {
+          "overlap_iou": 0.3,
+          "dilate_px": 2,
+          "touch_fraction": 0.05,
+          "touch_neighbours": 2,
+          "indicator_ratio": 2.0,
+          "polygon_ratio_min": 1.5,
+          "fingerprint": {
+            "overlap_share": {
+              "sam2": 0.09329157093169854,
+              "base": 0.11304241341696851
+            },
+            "tiling_share": {
+              "sam2": 0.11164801697721126,
+              "base": 0.16487277596264
+            },
+            "median_radius": {
+              "sam2": 23.537506888968096,
+              "base": 36.03940450234141
+            }
+          }
+        }
+      }
+    },
+    "valid": {
+      "batches": {
+        "base": {
+          "images": 40,
+          "polygons_total": 1472,
+          "polygons_per_image_mean": 36.8,
+          "polygons_per_image_median": 33.0,
+          "polygons_per_image_max": 68,
+          "median_radius": 33.56354568476333,
+          "overlap_share_mean": 0.08903537393726406,
+          "tiling_share_mean": 0.12717911646462687,
+          "union_over_sum_mean": 0.8868798643345229,
+          "max_iou_mean": 0.34443328520061833
+        },
+        "sam2_new": {
+          "images": 20,
+          "polygons_total": 1428,
+          "polygons_per_image_mean": 71.4,
+          "polygons_per_image_median": 76.5,
+          "polygons_per_image_max": 133,
+          "median_radius": 24.91489582057359,
+          "overlap_share_mean": 0.07701139330517418,
+          "tiling_share_mean": 0.09359975822690958,
+          "union_over_sum_mean": 0.926910251857549,
+          "max_iou_mean": 0.49660709565741373
+        }
+      },
+      "decision": {
+        "polygon_ratio": 2.3181818181818183,
+        "indicators": {
+          "A1_overlap": false,
+          "A2_tiling": false,
+          "A3_fragmentation": false
+        },
+        "indicators_fired": 0,
+        "decision": "real_density",
+        "thresholds": {
+          "overlap_iou": 0.3,
+          "dilate_px": 2,
+          "touch_fraction": 0.05,
+          "touch_neighbours": 2,
+          "indicator_ratio": 2.0,
+          "polygon_ratio_min": 1.5,
+          "fingerprint": {
+            "overlap_share": {
+              "sam2": 0.07701139330517418,
+              "base": 0.08903537393726406
+            },
+            "tiling_share": {
+              "sam2": 0.09359975822690958,
+              "base": 0.12717911646462687
+            },
+            "median_radius": {
+              "sam2": 24.91489582057359,
+              "base": 33.56354568476333
+            }
+          }
+        }
+      }
+    }
+  },
+  "pooled_batches": {
+    "base": {
+      "images": 180,
+      "polygons_total": 6887,
+      "polygons_per_image_mean": 38.26111111111111,
+      "polygons_per_image_median": 40.0,
+      "polygons_per_image_max": 68,
+      "median_radius": 35.44432229418935,
+      "overlap_share_mean": 0.10770751575481197,
+      "tiling_share_mean": 0.15649640718530375,
+      "union_over_sum_mean": 0.8589569620136965,
+      "max_iou_mean": 0.41453764339957644
+    },
+    "sam2_new": {
+      "images": 90,
+      "polygons_total": 7137,
+      "polygons_per_image_mean": 79.3,
+      "polygons_per_image_median": 79.0,
+      "polygons_per_image_max": 140,
+      "median_radius": 23.797391669284536,
+      "overlap_share_mean": 0.0896737536813598,
+      "tiling_share_mean": 0.10763729281047758,
+      "union_over_sum_mean": 0.9219472682664946,
+      "max_iou_mean": 0.580953101735851
+    }
+  },
+  "decision": {
+    "polygon_ratio": 1.975,
+    "indicators": {
+      "A1_overlap": false,
+      "A2_tiling": false,
+      "A3_fragmentation": false
+    },
+    "indicators_fired": 0,
+    "decision": "real_density",
+    "thresholds": {
+      "overlap_iou": 0.3,
+      "dilate_px": 2,
+      "touch_fraction": 0.05,
+      "touch_neighbours": 2,
+      "indicator_ratio": 2.0,
+      "polygon_ratio_min": 1.5,
+      "fingerprint": {
+        "overlap_share": {
+          "sam2": 0.0896737536813598,
+          "base": 0.10770751575481197
+        },
+        "tiling_share": {
+          "sam2": 0.10763729281047758,
+          "base": 0.15649640718530375
+        },
+        "median_radius": {
+          "sam2": 23.797391669284536,
+          "base": 35.44432229418935
+        }
+      }
+    }
+  },
+  "recall_linkage": {
+    "available": true,
+    "source": "D:\\PythonProject-YOLO\\reports\\Project_progress_report\\per_image_metrics.json",
+    "source_sha256": "3613bbeb045462a17d8b94ab67f1b72774714af11dbd94315c7934eeb45b36ae",
+    "images": 60,
+    "spearman_polygons_vs_fn_rate": 0.026118366212836905,
+    "spearman_polygons_vs_recall": 0.07107529869408169,
+    "terciles": [
+      {
+        "images": 20,
+        "polygons_mean": 22.7,
+        "ground_truth_mean": 22.7,
+        "fn_mean": 9.15,
+        "fn_rate_mean": 0.36902414474996936,
+        "recall_mean": 0.5809758552500307
+      },
+      {
+        "images": 20,
+        "polygons_mean": 44.45,
+        "ground_truth_mean": 44.45,
+        "fn_mean": 13.8,
+        "fn_rate_mean": 0.320396757035722,
+        "recall_mean": 0.679603242964278
+      },
+      {
+        "images": 20,
+        "polygons_mean": 77.85,
+        "ground_truth_mean": 77.85,
+        "fn_mean": 29.3,
+        "fn_rate_mean": 0.36392209737885256,
+        "recall_mean": 0.6360779026211473
+      }
+    ],
+    "by_source": {
+      "sam2_new": {
+        "images": 20,
+        "polygons_mean": 71.4,
+        "fn_rate_mean": 0.37191982732356854,
+        "recall_mean": 0.6280801726764313
+      },
+      "base": {
+        "images": 40,
+        "polygons_mean": 36.8,
+        "fn_rate_mean": 0.3407115859204877,
+        "recall_mean": 0.6342884140795123
+      }
+    }
+  },
+  "densest_images": [
+    {
+      "split": "train",
+      "stem": "DJI_2980",
+      "source": "sam2_new",
+      "polygons": 140,
+      "overlap_pairs": 6,
+      "overlap_polygons": 12,
+      "tiling_polygons": 37,
+      "union_coverage": 0.75310546875,
+      "union_over_sum": 0.8506506160537994,
+      "median_radius": 14.154359851302356,
+      "median_area": 630.5,
+      "max_iou": 0.8686744013823747,
+      "overlap_share": 0.08571428571428572,
+      "tiling_share": 0.2642857142857143,
+      "malformed": 0
+    },
+    {
+      "split": "valid",
+      "stem": "DJI_2470",
+      "source": "sam2_new",
+      "polygons": 133,
+      "overlap_pairs": 5,
+      "overlap_polygons": 10,
+      "tiling_polygons": 22,
+      "union_coverage": 0.7018294270833333,
+      "union_over_sum": 0.9096439932832106,
+      "median_radius": 17.607777518557306,
+      "median_area": 974.0,
+      "max_iou": 0.8019298245614035,
+      "overlap_share": 0.07518796992481203,
+      "tiling_share": 0.16541353383458646,
+      "malformed": 0
+    },
+    {
+      "split": "train",
+      "stem": "DJI_0550",
+      "source": "sam2_new",
+      "polygons": 129,
+      "overlap_pairs": 2,
+      "overlap_polygons": 4,
+      "tiling_polygons": 33,
+      "union_coverage": 0.7436555989583333,
+      "union_over_sum": 0.9731920730668302,
+      "median_radius": 8.234075889688375,
+      "median_area": 213.0,
+      "max_iou": 0.4271356783919598,
+      "overlap_share": 0.031007751937984496,
+      "tiling_share": 0.2558139534883721,
+      "malformed": 0
+    },
+    {
+      "split": "train",
+      "stem": "DJI_0560",
+      "source": "sam2_new",
+      "polygons": 108,
+      "overlap_pairs": 4,
+      "overlap_polygons": 7,
+      "tiling_polygons": 18,
+      "union_coverage": 0.6468001302083334,
+      "union_over_sum": 0.960236800773227,
+      "median_radius": 8.841641431922334,
+      "median_area": 246.0,
+      "max_iou": 0.7440704766207364,
+      "overlap_share": 0.06481481481481481,
+      "tiling_share": 0.16666666666666666,
+      "malformed": 0
+    },
+    {
+      "split": "train",
+      "stem": "DJI_2950",
+      "source": "sam2_new",
+      "polygons": 105,
+      "overlap_pairs": 14,
+      "overlap_polygons": 24,
+      "tiling_polygons": 26,
+      "union_coverage": 0.6669466145833334,
+      "union_over_sum": 0.8029549507181628,
+      "median_radius": 21.94545187040074,
+      "median_area": 1513.0,
+      "max_iou": 0.8970965830535256,
+      "overlap_share": 0.22857142857142856,
+      "tiling_share": 0.24761904761904763,
+      "malformed": 0
+    },
+    {
+      "split": "train",
+      "stem": "DJI_2990",
+      "source": "sam2_new",
+      "polygons": 105,
+      "overlap_pairs": 2,
+      "overlap_polygons": 4,
+      "tiling_polygons": 17,
+      "union_coverage": 0.6816569010416667,
+      "union_over_sum": 0.926525700076545,
+      "median_radius": 20.137695871130575,
+      "median_area": 1274.0,
+      "max_iou": 0.5536219273439199,
+      "overlap_share": 0.0380952380952381,
+      "tiling_share": 0.1619047619047619,
+      "malformed": 0
+    },
+    {
+      "split": "train",
+      "stem": "DJI_3380",
+      "source": "sam2_new",
+      "polygons": 103,
+      "overlap_pairs": 3,
+      "overlap_polygons": 5,
+      "tiling_polygons": 11,
+      "union_coverage": 0.5947786458333333,
+      "union_over_sum": 0.9215653638780029,
+      "median_radius": 18.77997214831907,
+      "median_area": 1108.0,
+      "max_iou": 0.37393162393162394,
+      "overlap_share": 0.04854368932038835,
+      "tiling_share": 0.10679611650485436,
+      "malformed": 0
+    },
+    {
+      "split": "train",
+      "stem": "DJI_2550",
+      "source": "sam2_new",
+      "polygons": 102,
+      "overlap_pairs": 3,
+      "overlap_polygons": 6,
+      "tiling_polygons": 9,
+      "union_coverage": 0.6326920572916667,
+      "union_over_sum": 0.9310356390113048,
+      "median_radius": 22.028659570214323,
+      "median_area": 1524.5,
+      "max_iou": 0.6617324561403509,
+      "overlap_share": 0.058823529411764705,
+      "tiling_share": 0.08823529411764706,
+      "malformed": 0
+    },
+    {
+      "split": "train",
+      "stem": "DJI_3000",
+      "source": "sam2_new",
+      "polygons": 102,
+      "overlap_pairs": 4,
+      "overlap_polygons": 8,
+      "tiling_polygons": 6,
+      "union_coverage": 0.6197819010416666,
+      "union_over_sum": 0.9372237263106079,
+      "median_radius": 21.572005410542875,
+      "median_area": 1462.0,
+      "max_iou": 0.5887810140237325,
+      "overlap_share": 0.0784313725490196,
+      "tiling_share": 0.058823529411764705,
+      "malformed": 0
+    },
+    {
+      "split": "train",
+      "stem": "DJI_2560",
+      "source": "sam2_new",
+      "polygons": 101,
+      "overlap_pairs": 3,
+      "overlap_polygons": 6,
+      "tiling_polygons": 7,
+      "union_coverage": 0.62986328125,
+      "union_over_sum": 0.9441080463920293,
+      "median_radius": 25.060435060880707,
+      "median_area": 1973.0,
+      "max_iou": 0.5943959577400092,
+      "overlap_share": 0.0594059405940594,
+      "tiling_share": 0.06930693069306931,
+      "malformed": 0
+    }
+  ]
+}

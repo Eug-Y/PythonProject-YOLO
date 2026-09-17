@@ -371,12 +371,65 @@ consecutive rejections mean the 60-image validation split is exhausted for
 hyper-parameter, sampling and weighting variants: further gains have to come
 from label quality, hard-example definition or genuinely new data.
 
+### Label density audit (Data_v30)
+
+V28 and V29 were both motivated by the same guess: the SAM2-assisted batch has
+about twice the polygons per image of the hand-labelled batch (79.3 versus 38.3
+pooled over train+valid), so its densely labelled scenes were suspected of
+inflating the false negatives. `build_data_v30_label_density_audit.py` tests
+that guess with three indicators that were fixed before the real data was read,
+using the hand-labelled batch as the control.
+
+The result rejects the hypothesis:
+
+- **No over-segmentation.** The SAM2 batch has *fewer* mutually overlapping
+  polygons (overlap share `0.090` versus `0.108`) and *fewer* tiling contacts
+  (`0.108` versus `0.157`) than the hand-labelled batch, and its union-to-sum
+  area ratio is closer to 1 (`0.92` versus `0.85`). Its polygons are smaller
+  (median equivalent radius `23.8` versus `35.4` grid units) but they are
+  spatially disjoint, so instances were not split into touching or duplicated
+  pieces. Decision: `real_density`.
+- **Recall does not degrade with density.** On the 60 validation images the
+  Spearman correlation between polygon count and frozen-production FN rate is
+  `+0.026`, and FN *rate* is flat across density terciles (`0.369`, `0.320`,
+  `0.364`). Absolute FN grows with instance count because there are simply more
+  instances to miss — the per-instance recall ceiling is uniform, so the
+  recall-priority route V29 took had nothing to recover.
+- **The label geometry warnings sit in the hand-labelled batch, not in the SAM2
+  batch.** Re-running `label_quality_audit.py` on train+valid leaves 328 warnings
+  across 136 of 270 images, dominated by 302 `self_intersection` rows, and 326 of
+  those warnings come from the 180 hand-labelled images (1.81 per image) against
+  19 from the 90 SAM2 images (0.21 per image).
+
+Two consequences for the next round: label merging is not justified, and neither
+is another sampling or weighting variant on the same split. The open items are
+the 302 unresolved self-intersections concentrated in the hand-labelled labels
+(the review queue still lists 91 train `P3-review` and 21 train `P2-geometry`
+images), cross-region generalization, and the delivery form of the result.
+
+To reproduce the audit (train and valid only; `test` is not an accepted value):
+
+```powershell
+.\.venv\Scripts\python.exe build_data_v30_label_density_audit.py
+.\.venv\Scripts\python.exe label_quality_audit.py datasets/Data_v3 `
+  --output reports/Data_v3_label_quality_trainvalid_v30 --splits train valid
+```
+
+Only one acceptance CSV (`reports/Data_v3_geometry_review/geometry_review.csv`,
+36 items) survives for the seven review state files, so merging the available
+acceptances removes just 17 of the 345 raw warning rows. A merged acceptance
+index is worth rebuilding before the next audit is treated as a queue.
+
 ### Evidence index
 
 - `reports/Project_progress_report/index.html` – production replay, per-image
   metrics, annotated effect figures and the V1→V29 timeline.
 - `reports/Data_v19_final_report/README.md` – frozen primary checkpoint, fixed
   threshold slice audit, and the `sparse_low_coverage` regression list.
+- `reports/Data_v30_label_density_audit/summary.json` – the density decision, its
+  pre-registered thresholds and the valid recall linkage.
+- `reports/Data_v3_label_quality_trainvalid_v30_reviewed/summary.json` –
+  refreshed train/valid label audit with the surviving review acceptances merged.
 - `logs/v27_release_blind_final.summary.json` – the one-shot sealed blind
   evaluation. It is frozen evidence and must not be reused for tuning.
 - `logs/v28_*.summary.json`, `logs/v29_*.summary.json` – rejected-experiment

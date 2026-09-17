@@ -1,0 +1,35 @@
+{
+  "dataset": "Data_v3",
+  "dataset_root": "D:\\PythonProject-YOLO\\datasets\\Data_v3",
+  "images": 270,
+  "labels": 270,
+  "polygons": 14024,
+  "avg_polygons_per_image": 51.941,
+  "avg_points_per_polygon": 59.924,
+  "issue_rows": 328,
+  "issue_images": 136,
+  "errors": 0,
+  "warnings": 328,
+  "issues_by_code": {
+    "duplicate_vertex": 23,
+    "empty_label": 1,
+    "polygon_count_outlier": 2,
+    "self_intersection": 302
+  },
+  "sources": {
+    "base": {
+      "images": 180,
+      "polygons": 6887,
+      "avg_polygons_per_image": 38.261,
+      "avg_points_per_polygon": 58.867
+    },
+    "sam2_new": {
+      "images": 90,
+      "polygons": 7137,
+      "avg_polygons_per_image": 79.3,
+      "avg_points_per_polygon": 60.943
+    }
+  },
+  "accepted_review_items": 33,
+  "accepted_warning_codes": 42
+}
