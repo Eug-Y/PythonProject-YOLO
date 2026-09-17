@@ -205,6 +205,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--epochs", type=int, default=40)
     parser.add_argument("--patience", type=int, default=12)
     parser.add_argument("--warmup-epochs", type=float, default=None)
+    parser.add_argument("--lr0", type=float, default=0.002, help="Initial SGD learning rate.")
+    parser.add_argument("--lrf", type=float, default=0.01, help="Final cosine learning-rate fraction.")
     parser.add_argument("--imgsz", type=int, default=640)
     parser.add_argument("--batch", type=int, default=None, help="Defaults to a conservative value for the base model.")
     parser.add_argument("--device", default="0")
@@ -305,6 +307,8 @@ def main() -> None:
             raise ValueError(f"--{name} must be in [0, 1], got {value}")
     if cli.close_mosaic is not None and cli.close_mosaic < 0:
         raise ValueError(f"--close-mosaic must be non-negative, got {cli.close_mosaic}")
+    if not 0.0 < cli.lr0 <= 0.1 or not 0.0 < cli.lrf <= 1.0:
+        raise ValueError("--lr0 must be in (0, 0.1] and --lrf must be in (0, 1]")
 
     epochs = 1 if cli.smoke_test else cli.epochs
     cache = False if cli.smoke_test else cli.cache
@@ -335,7 +339,8 @@ def main() -> None:
         "workers": workers,
         "patience": cli.patience,
         "optimizer": "SGD",
-        "lr0": 0.002,
+        "lr0": cli.lr0,
+        "lrf": cli.lrf,
         "momentum": 0.937,
         "weight_decay": 0.0005,
         "warmup_epochs": (
