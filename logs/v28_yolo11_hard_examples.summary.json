@@ -1,0 +1,122 @@
+{
+  "version": "data_v28_yolo11_hard_examples_summary_v1",
+  "created_at": "2026-08-21T23:29:31+08:00",
+  "protocol": {
+    "version": "data_v28_yolo11_hard_examples_protocol_v1",
+    "preregistered_at": "2026-08-21T21:39:25+08:00",
+    "single_training_change": "4 train-only YOLO11 hard-negative crops plus 8 train-only hard-positive replays",
+    "architecture": "YOLO11n-seg + 3x CoordAtt + 3x ECA",
+    "primary_model": "YOLO11",
+    "auxiliary_model": "frozen YOLOv8; training disabled",
+    "channels": [
+      "R",
+      "G",
+      "B",
+      "NDVI",
+      "NDRE"
+    ],
+    "epochs": 60,
+    "imgsz": 1024,
+    "batch": 1,
+    "effective_batch_control": "Ultralytics nbs=64 gradient accumulation",
+    "runtime_intervention": "batch=2 exceeded the 6 GB dedicated VRAM budget on dense Mosaic batches; batch=1 is preregistered before the formal candidate run",
+    "seed": 0,
+    "training_overlap_mask": false,
+    "fusion_config_search_allowed": false,
+    "fusion_weights": [
+      1.0,
+      1.0
+    ],
+    "every_output_requires_yolo11": true,
+    "selection_splits": [
+      "train",
+      "valid"
+    ],
+    "held_out_test_used": false,
+    "sealed_blind_used": false,
+    "promotion_gate_relative_to_v27_seed0": {
+      "f1_delta_min": 0.015,
+      "precision_delta_min": 0.0,
+      "recall_delta_min": -0.01,
+      "mean_matched_iou_delta_min": -0.005
+    },
+    "deployment_write_allowed": false
+  },
+  "candidate_checkpoint": "D:\\PythonProject-YOLO\\runs\\segment\\land_seg\\v28_yolo11_hard_examples_batch1_seed0_v2\\weights\\best.pt",
+  "candidate_checkpoint_sha256": "ef712392ebd6bcaa95f5cf6a693f484c2b9d436dca94d8979dbfd1e0d1d3a66a",
+  "training_progress": {
+    "epochs_recorded": 60,
+    "last_epoch": 60,
+    "last_mask_map50_95": 0.32314,
+    "best_epoch": 32,
+    "best_mask_map50_95": 0.33887,
+    "best_mask_map50": 0.54822,
+    "best_mask_precision": 0.65646,
+    "best_mask_recall": 0.55151
+  },
+  "locked_fusion_config": "D:\\PythonProject-YOLO\\reports\\Data_v27_yolo11_fusion_recall_recovery\\locked_fusion_config.json",
+  "locked_fusion_config_sha256": "b90d85b26a708b70ea927ce9c60a71682474ffc1f919c7a069779d66a4e0b9e3",
+  "v27_seed0_baseline_fusion": {
+    "tp": 1855,
+    "fp": 1020,
+    "fn": 1045,
+    "precision": 0.6452173913043479,
+    "recall": 0.6396551724137931,
+    "f1": 0.6424242424242423,
+    "mean_matched_iou": 0.8419550229040537
+  },
+  "v28_locked_valid_metrics": {
+    "fusion": {
+      "tp": 1655,
+      "fp": 762,
+      "fn": 1245,
+      "precision": 0.6847331402565163,
+      "recall": 0.5706896551724138,
+      "f1": 0.6225315027271017,
+      "mean_matched_iou": 0.8480593240093824
+    },
+    "primary_yolo11": {
+      "tp": 1641,
+      "fp": 834,
+      "fn": 1259,
+      "precision": 0.6630303030303031,
+      "recall": 0.5658620689655173,
+      "f1": 0.6106046511627907,
+      "mean_matched_iou": 0.8265912433511292
+    },
+    "auxiliary_yolov8": {
+      "tp": 1856,
+      "fp": 1010,
+      "fn": 1044,
+      "precision": 0.6475924633635729,
+      "recall": 0.64,
+      "f1": 0.6437738466874783,
+      "mean_matched_iou": 0.846156314497584
+    }
+  },
+  "promotion_gate": {
+    "deltas": {
+      "f1": -0.01989273969714067,
+      "precision": 0.03951574895216847,
+      "recall": -0.06896551724137934,
+      "mean_matched_iou": 0.00610430110532878
+    },
+    "checks": {
+      "f1_delta_at_least_0_015": false,
+      "precision_not_lower": true,
+      "recall_delta_at_least_minus_0_01": false,
+      "mean_matched_iou_delta_at_least_minus_0_005": true,
+      "every_output_requires_yolo11": true
+    },
+    "passed": false
+  },
+  "gate_passed": false,
+  "decision": "reject_v28_retain_v27_production",
+  "held_out_test_used": false,
+  "sealed_blind_used": false,
+  "deployment_eligible": false,
+  "deployment_write_allowed": false,
+  "production_deployment_sha256_before": "320c1db5dea2c4ce86cf8fd96d4b95095efeff4bb6e27099b0e22205e1b8dff2",
+  "production_deployment_sha256_after": "320c1db5dea2c4ce86cf8fd96d4b95095efeff4bb6e27099b0e22205e1b8dff2",
+  "production_deployment_unchanged": true
+}

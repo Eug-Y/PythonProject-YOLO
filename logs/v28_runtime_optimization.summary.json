@@ -1,0 +1,42 @@
+{
+  "version": "v28_runtime_optimization_summary_v1",
+  "created_at": "2026-08-21T21:05:39+08:00",
+  "state": "passed",
+  "data_scope": "datasets/Data_v3/valid only",
+  "blind_data_loaded": false,
+  "mode": "all",
+  "sample_count": 3,
+  "before": {
+    "summary": "logs/v28_runtime_baseline.summary.json",
+    "median_seconds": 11.1593,
+    "max_seconds": 11.3509
+  },
+  "after": {
+    "summary": "logs/v28_runtime_optimized.summary.json",
+    "median_seconds": 5.0481,
+    "max_seconds": 5.1773
+  },
+  "improvement": {
+    "median_seconds_saved": 6.1112,
+    "median_percent_faster": 54.76,
+    "target_seconds": 8.0,
+    "target_passed": true
+  },
+  "result_equivalence": {
+    "images_checked": 3,
+    "weed_metrics_exact": true,
+    "weed_candidate_rows_exact": true,
+    "candidate_mask_sha256_exact": true,
+    "row_corridor_sha256_exact": true,
+    "overlay_sha256_exact": true,
+    "yolo_detection_counts_exact": true,
+    "returned_layers_exact": true
+  },
+  "changes": [
+    "connected-component scans restricted to component bounding boxes",
+    "robust novelty reference statistics computed once per image",
+    "NIR band reused within one request",
+    "unused weed-only feature layers removed from web computation",
+    "debug prediction image writes disabled unless explicitly enabled"
+  ]
+}

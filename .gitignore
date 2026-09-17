@@ -23,7 +23,9 @@ datasets/
 待标注_100张/
 
 # Training runs and generated evidence are ignored by default. The frozen V27
-# production weights/config summaries are force-added explicitly to Git.
+# production weights/config summaries and the V28/V29 rejected-experiment
+# summaries are force-added explicitly to Git, so every keep/reject decision can
+# be audited from version history alone.
 runs/
 reports/
 logs/
