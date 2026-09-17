@@ -340,3 +340,46 @@ candidate. See `reports/Data_v6_preterrain_yolov8n_current5_valid/README.md`.
 No test images were read. Terrain training remains gated on real aligned
 DEM/DSM/DTM data, and final training remains gated on completing the
 high-priority label review queue.
+
+## Data_v7–v29 research track
+
+Everything after the terrain gate stayed inside a train/valid-only protocol: the
+grouped split keeps adjacent flight frames in the same split, the training
+overlap mask stays disabled, and the frozen test split and the one-shot release
+blind holdout are never read during selection. The full narrative, the per-image
+metrics and the annotated production-effect figures are in
+`reports/Project_progress_report/index.html`.
+
+| Stage | Goal | Outcome | Evidence |
+| --- | --- | --- | --- |
+| V1–V3 | five-channel data build, label audit, geometry review | read-only audit plus a correction workflow established; test split sealed | `reports/Data_v3_label_quality/` |
+| V4–V5 | spectral factor screening (17-channel candidate store, compact screening) | `RGB + RE_BSI_PROXY` and `RGB + MCARI` both stayed below the deployed model and were archived as research results | `reports/Data_v5_final_summary.md` |
+| V6–V8 | terrain factors, teacher-refined labels, dual-branch multispectral fusion | terrain training remains gated on real aligned DEM/DSM/DTM; teacher refinement and fusion screening became the later data base | `reports/Data_v8_yolo11_paired_multiseed/` |
+| V9–V18 | grouped cross-validation, boundary masks, standardization, threshold robustness | fixed the protocol: group by flight segment, keep the training overlap mask off | `reports/Data_v13_overlap_precision_analysis/` |
+| V19 | YOLO11n boundary training without overlap masks, multi-seed | passed the pre-registered gate and was frozen: seed-0 Mask mAP50-95 `0.39596`, sha256 `eea619ab…` | `reports/Data_v19_final_report/README.md` |
+| V22–V27 | fusion matrix, full-resolution fusion, recall recovery, production switch | locked 1:1 strict YOLO11-primary fusion; blind F1 `0.5282` versus `0.4992` for the previous model, then promoted | `logs/v27_production_promotion.summary.json` |
+| V28 (rejected) | train-only hard-example mining: 4 hard-negative crops plus 8 hard-positive replays | 60 epochs, best epoch 32; fusion F1 `0.6225` (−0.0199) and recall `−0.0690`, so the gate failed | `logs/v28_yolo11_hard_examples.summary.json` |
+| V29 (rejected) | recall priority: low-learning-rate fine-tune from the frozen V19 weights plus train-only false-negative weighted sampling | 12 epochs, best epoch 1; fusion F1 `0.6301` (−0.0123) and recall `−0.0238`, so the gate failed | `logs/v29_yolo11_recall_finetune.summary.json` |
+
+### Deployment decision log
+
+The deployed model is still `v27_yolo11_primary_fusion_v1`. Both rejected runs
+recorded `production_deployment_unchanged = true`, and the deployment config
+hash is identical before and after each one. V28 bought precision (`+0.0395`) by
+giving up recall (`−0.0690`); V29 never improved on its first epoch. Two
+consecutive rejections mean the 60-image validation split is exhausted for
+hyper-parameter, sampling and weighting variants: further gains have to come
+from label quality, hard-example definition or genuinely new data.
+
+### Evidence index
+
+- `reports/Project_progress_report/index.html` – production replay, per-image
+  metrics, annotated effect figures and the V1→V29 timeline.
+- `reports/Data_v19_final_report/README.md` – frozen primary checkpoint, fixed
+  threshold slice audit, and the `sparse_low_coverage` regression list.
+- `logs/v27_release_blind_final.summary.json` – the one-shot sealed blind
+  evaluation. It is frozen evidence and must not be reused for tuning.
+- `logs/v28_*.summary.json`, `logs/v29_*.summary.json` – rejected-experiment
+  protocols, gates and decisions (tracked in Git on purpose).
+- `reports/Data_v27_yolo11_fusion_recall_recovery/locked_fusion_config.json` –
+  the locked fusion parameters referenced by `configs/deployment.json`.
