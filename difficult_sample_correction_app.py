@@ -46,8 +46,32 @@ def _polygon_issues(points: np.ndarray) -> list[str]:
     return issues
 
 
+def _polygon_warnings(points: np.ndarray) -> list[str]:
+    warnings = []
+    if polygon_area(points) < 2.5e-5:
+        warnings.append("small_polygon_review")
+    if np.any(points <= 1e-4) or np.any(points >= 1 - 1e-4):
+        warnings.append("touches_image_edge")
+    if len(points) > 200:
+        warnings.append("excessive_vertices")
+    return warnings
+
+
+def _polygon_signature(class_id: str, points: np.ndarray) -> tuple[str, tuple[tuple[float, float], ...]]:
+    """Order-independent signature used only to catch exact duplicate instances."""
+    vertices = tuple(sorted(map(tuple, np.round(points, 8).tolist())))
+    return class_id, vertices
+
+
 def _annotated_polygon(class_id: str, points: np.ndarray) -> dict[str, Any]:
-    return {"class_id": class_id, "points": points.tolist(), "issues": _polygon_issues(points)}
+    return {
+        "class_id": class_id,
+        "points": points.tolist(),
+        "issues": _polygon_issues(points),
+        "warnings": _polygon_warnings(points),
+        "area": polygon_area(points),
+        "point_count": len(points),
+    }
 
 
 def _parse_label(text: str) -> list[dict[str, Any]]:
@@ -87,14 +111,59 @@ def _format_labels(raw_polygons: Any) -> str:
     if not isinstance(raw_polygons, list) or len(raw_polygons) > 2000:
         raise ValueError("整图轮廓列表无效")
     lines = []
+    signatures: dict[tuple[str, tuple[tuple[float, float], ...]], int] = {}
     for index, raw in enumerate(raw_polygons, 1):
         try:
             class_id, points = _validate_polygon(raw)
         except ValueError as exc:
             raise ValueError(f"第 {index} 个轮廓：{exc}") from exc
+        signature = _polygon_signature(class_id, points)
+        if signature in signatures:
+            raise ValueError(f"第 {index} 个轮廓：与第 {signatures[signature]} 个轮廓完全重复")
+        signatures[signature] = index
         values = " ".join(f"{value:.8f}" for value in points.reshape(-1))
         lines.append(f"{class_id} {values}")
     return ("\n".join(lines) + "\n") if lines else ""
+
+
+def _quality_report(raw_polygons: Any) -> dict[str, Any]:
+    if not isinstance(raw_polygons, list) or len(raw_polygons) > 2000:
+        raise ValueError("整图轮廓列表无效")
+    polygons = []
+    signatures: dict[tuple[str, tuple[tuple[float, float], ...]], int] = {}
+    for index, raw in enumerate(raw_polygons, 1):
+        if not isinstance(raw, dict):
+            raise ValueError(f"第 {index} 个轮廓格式无效")
+        class_id = str(raw.get("class_id", "0")).strip()
+        points = np.asarray(raw.get("points"), dtype=np.float64)
+        if (
+            not class_id.isdigit()
+            or points.ndim != 2
+            or points.shape[1] != 2
+            or not 3 <= len(points) <= 1000
+            or not np.all(np.isfinite(points))
+            or np.any(points < 0)
+            or np.any(points > 1)
+        ):
+            raise ValueError(f"第 {index} 个轮廓格式无效")
+        annotated = _annotated_polygon(class_id, points)
+        signature = _polygon_signature(class_id, points)
+        if signature in signatures:
+            annotated["issues"].append(f"duplicate_polygon:{signatures[signature]}")
+        else:
+            signatures[signature] = index
+        polygons.append(annotated)
+    invalid_indices = [index for index, polygon in enumerate(polygons, 1) if polygon["issues"]]
+    warning_indices = [index for index, polygon in enumerate(polygons, 1) if polygon["warnings"]]
+    return {
+        "polygon_count": len(polygons),
+        "invalid_polygon_count": len(invalid_indices),
+        "warning_polygon_count": len(warning_indices),
+        "invalid_indices": invalid_indices,
+        "warning_indices": warning_indices,
+        "polygons": polygons,
+        "can_save": not invalid_indices,
+    }
 
 
 def _clean_workspace(raw: Any) -> dict[str, Any]:
@@ -269,6 +338,7 @@ class CorrectionStore:
                 "updated_at": None,
             }
         invalid_count = sum(bool(polygon.get("issues")) for polygon in workspace["polygons"])
+        warning_count = sum(bool(polygon.get("warnings")) for polygon in workspace["polygons"])
         return {
             **row,
             "status": state["status"],
@@ -276,6 +346,7 @@ class CorrectionStore:
             "polygon_count": len(workspace["polygons"]),
             "saved_polygon_count": len(saved_polygons),
             "invalid_polygon_count": invalid_count,
+            "warning_polygon_count": warning_count,
             "has_draft": stored_workspace is not None,
             "workspace": workspace,
             "image_url": f"/api/image/{image}",
@@ -426,6 +497,17 @@ def create_app(
         except ValueError as exc:
             return jsonify({"error": str(exc)}), 400
         return jsonify({"ok": True, **saved})
+
+    @app.post("/api/item/<path:image>/quality")
+    def quality(image: str):
+        if image not in store.by_image:
+            return jsonify({"error": "未知图片"}), 404
+        payload = request.get_json(silent=True) or {}
+        try:
+            report = _quality_report(payload.get("polygons"))
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 400
+        return jsonify({"ok": True, **report})
 
     @app.delete("/api/item/<path:image>/draft")
     def clear_draft(image: str):

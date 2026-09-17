@@ -129,6 +129,41 @@ class DifficultSampleCorrectionTest(unittest.TestCase):
         self.assertEqual(cleared.status_code, 200)
         self.assertEqual(cleared.get_json()["status"]["drafts"], 0)
 
+    def test_quality_check_numbers_duplicate_instances_and_does_not_write(self) -> None:
+        polygon = {"class_id": "0", "points": [[0.2, 0.2], [0.5, 0.2], [0.4, 0.6]]}
+        duplicate_reversed = {"class_id": "0", "points": list(reversed(polygon["points"]))}
+        response = self.client.post(
+            "/api/item/DJI_0001.JPG/quality",
+            json={"polygons": [polygon, duplicate_reversed]},
+        )
+        self.assertEqual(response.status_code, 200)
+        report = response.get_json()
+        self.assertFalse(report["can_save"])
+        self.assertEqual(report["invalid_indices"], [2])
+        self.assertIn("duplicate_polygon:1", report["polygons"][1]["issues"])
+        self.assertEqual(self.dataset_label.read_text(encoding="utf-8"), ORIGINAL)
+
+    def test_quality_check_flags_edge_touching_for_human_review(self) -> None:
+        response = self.client.post(
+            "/api/item/DJI_0001.JPG/quality",
+            json={"polygons": [{"class_id": "0", "points": [[0.0, 0.2], [0.2, 0.2], [0.1, 0.5]]}]},
+        )
+        self.assertEqual(response.status_code, 200)
+        report = response.get_json()
+        self.assertTrue(report["can_save"])
+        self.assertEqual(report["warning_indices"], [1])
+        self.assertIn("touches_image_edge", report["polygons"][0]["warnings"])
+
+    def test_save_rejects_duplicate_instances_without_writes(self) -> None:
+        polygon = {"class_id": "0", "points": [[0.2, 0.2], [0.5, 0.2], [0.4, 0.6]]}
+        response = self.client.post(
+            "/api/item/DJI_0001.JPG/save",
+            json={"polygons": [polygon, polygon]},
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("与第 1 个轮廓完全重复", response.get_json()["error"])
+        self.assertEqual(self.dataset_label.read_text(encoding="utf-8"), ORIGINAL)
+
 
 if __name__ == "__main__":
     unittest.main()
