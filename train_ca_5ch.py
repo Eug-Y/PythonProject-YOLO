@@ -4,6 +4,7 @@ YOLO11 + CoordAtt + ECA 5 通道多光谱训练脚本
 加载 _5ch.npy 替代 JPG，第一层 Conv 3→5 通道
 """
 import argparse
+from pathlib import Path
 
 import numpy as np
 import torch
