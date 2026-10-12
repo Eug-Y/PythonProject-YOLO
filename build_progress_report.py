@@ -504,11 +504,9 @@ def build_html(
     runtime_after = (runtime.get("after") or {}).get("median_seconds")
     hard_metrics = (hard.get("v28_locked_valid_metrics") or {}).get("fusion") or {}
     hard_baseline = hard.get("v27_seed0_baseline_fusion") or {}
-    hard_gate = hard.get("promotion_gate") or {}
     hard_progress = hard.get("training_progress") or {}
     recall_metrics = (recall.get("v29_locked_valid_metrics") or {}).get("fusion") or {}
     recall_baseline = recall.get("v27_seed0_baseline_fusion") or {}
-    recall_gate = recall.get("recall_priority_gate") or {}
     recall_progress = recall.get("training_progress") or {}
 
     extra_blocks = []
@@ -803,7 +801,7 @@ def main() -> int:
     showcase = select_showcase(per_image, limit=max(1, args.showcase_limit))
     empty_labels = zero_ground_truth(per_image)
     if empty_labels:
-        print(f"注意：{len(empty_labels)} 张验证图标签为空，已从效果图选取中排除：" 
+        print(f"注意：{len(empty_labels)} 张验证图标签为空，已从效果图选取中排除："
               + ", ".join(row["image"] for row in empty_labels))
     figures: dict[str, str] = {}
     for row in showcase:

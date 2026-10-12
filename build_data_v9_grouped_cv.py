@@ -156,7 +156,6 @@ def build(output: Path, folds: int, max_gap: int) -> dict[str, object]:
         raise RuntimeError(f"Expected 270 train+valid images, got {len(records)}")
     groups = build_sequence_groups(records, max_gap)
     assignment = assign_groups(groups, folds)
-    by_stem = {str(row["stem"]): row for row in records}
     output.mkdir(parents=True, exist_ok=True)
     fold_contracts: list[dict[str, object]] = []
 

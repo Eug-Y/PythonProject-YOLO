@@ -1,5 +1,6 @@
 """和web viewer完全一致的测试脚本"""
-import cv2, numpy as np
+import cv2
+import numpy as np
 from web_viewer import yolo_predict
 
 # 改成你的图片路径
@@ -10,7 +11,8 @@ img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 h, w = img_rgb.shape[:2]
 
 # 尝试从 _5ch.npy 加载 NDVI/NDRE
-import re, os
+import re
+import os
 from pathlib import Path
 stem = os.path.splitext(os.path.basename(IMG_PATH))[0]
 m = re.search(r"DJI_(\d{4})", stem)

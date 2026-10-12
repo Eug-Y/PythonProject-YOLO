@@ -8,7 +8,10 @@ YOLO v10 + SAM2 批量标注脚本 (多 bbox box prompt)
 
 与之前 100 张标注质量一致。
 """
-import os, re, sys, time
+import os
+import re
+import sys
+import time
 import cv2
 import numpy as np
 from pathlib import Path
@@ -349,7 +352,7 @@ def main():
     total_time = time.time() - total_start
     print(f"\n  完成! ok={ok} fail={fail} skip={skipped}  总耗时 {total_time/60:.1f}min")
     print(f"  标注文件: {OUT_DIR}")
-    print(f"\n  下一步: 将标注文件移动到 datasets/Data_v2/train/labels/ 并更新数据集")
+    print("\n  下一步: 将标注文件移动到 datasets/Data_v2/train/labels/ 并更新数据集")
 
 
 if __name__ == "__main__":

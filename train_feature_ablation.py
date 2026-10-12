@@ -372,7 +372,7 @@ def main() -> None:
 
     print(f"\n===== {manifest.get('version', 'multichannel')} 分组消融 =====")
     print(f"组: {cli.group}  通道({len(selected_channels)}): {', '.join(selected_channels)}")
-    print(f"数据: train + valid；test 未暴露、未读取")
+    print("数据: train + valid；test 未暴露、未读取")
     print(
         f"模型: {base_checkpoint}  attention={cli.attention}  init={cli.extra_init}  "
         f"imgsz={cli.imgsz} epochs={epochs} batch={batch} seed={cli.seed}"

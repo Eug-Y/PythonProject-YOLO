@@ -11,7 +11,6 @@ import json
 import statistics
 from pathlib import Path
 
-import numpy as np
 
 from calibrate_yolo_ensemble import load_yolo_ground_truth, match_instances
 from deployment_fusion import infer_shadow_components, load_shadow_config, sha256
@@ -140,7 +139,6 @@ def evaluate_once() -> dict:
         indices = validate_channel_selection(tuple(feature_manifest["channels"]), tuple(shadow["channels"]))
         source_count = 0
         for stem in store.stems:
-            image_path = store.images_dir / f"{stem}.JPG"
             image_5ch = _load_selected_array(
                 store.dataset_root / "test" / "features" / f"{stem}.npy",
                 indices,

@@ -1,6 +1,6 @@
 import unittest
 
-from run_data_v20_final_test import fixed_totals, upgrade_decision
+from run_data_v20_final_test import upgrade_decision
 
 
 class DataV20FinalTestTests(unittest.TestCase):

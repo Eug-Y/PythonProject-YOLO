@@ -15,7 +15,7 @@ import numpy as np
 
 from multispectral import PROJECT_ROOT, read_image
 from prediction_bundle import load_prediction_bundle
-from yolo_mask_ensemble import MaskPrediction, bbox_from_mask, cropped_mask_iou, fuse_mask_predictions, mask_iou
+from yolo_mask_ensemble import MaskPrediction, bbox_from_mask, cropped_mask_iou, fuse_mask_predictions
 
 
 def load_yolo_ground_truth(label_path: Path, image_hw: tuple[int, int]) -> list[np.ndarray]:

@@ -13,7 +13,6 @@ from run_data_v9_grouped_cv import now_iso, sha256
 from run_data_v23_yolo11_fusion_valid import (
     AUXILIARY_EXPORT,
     DATASET,
-    EQUAL_FUSION as V23_EQUAL,
     PRIMARY,
     PRIMARY_EXPORT,
     gate,

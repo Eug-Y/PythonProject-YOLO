@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import unittest
-from pathlib import Path
 
 from benchmark_v28_runtime import PROJECT_ROOT, validate_image_path
 

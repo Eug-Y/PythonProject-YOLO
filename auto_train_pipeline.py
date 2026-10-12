@@ -109,7 +109,6 @@ def run_training(data_yaml):
         print(f"{'='*60}")
 
         try:
-            import torch
             import torch.nn as nn
             from custom_modules import CoordAtt, ECA
             from ultralytics.nn.tasks import SegmentationModel, load_checkpoint
@@ -195,7 +194,7 @@ def run_training(data_yaml):
                 "amp": True, "cache": True,
                 "save": True, "save_period": 10,
                 "project": "land_seg",
-                "name": f"exp_ca_5ch_v11",
+                "name": "exp_ca_5ch_v11",
                 "exist_ok": True,
                 "seed": SEED,
                 "deterministic": False,
@@ -206,7 +205,7 @@ def run_training(data_yaml):
             trainer.model = base_model
             trainer.train()
 
-            print(f"[pipeline] 训练完成!")
+            print("[pipeline] 训练完成!")
             return True
 
         except Exception as e:
@@ -243,10 +242,10 @@ def main():
     success = run_training(data_yaml)
 
     if success:
-        print(f"\n[Pipeline] 全部完成!")
-        print(f"  模型: land_seg/exp_ca_5ch_v11/weights/best.pt")
+        print("\n[Pipeline] 全部完成!")
+        print("  模型: land_seg/exp_ca_5ch_v11/weights/best.pt")
     else:
-        print(f"\n[Pipeline] 训练失败，需手动排查")
+        print("\n[Pipeline] 训练失败，需手动排查")
 
     return success
 

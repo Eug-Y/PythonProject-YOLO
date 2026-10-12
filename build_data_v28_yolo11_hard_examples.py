@@ -16,7 +16,6 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-import cv2
 import numpy as np
 
 from build_data_v20_sparse_context_dataset import clipped_labels, read_polygons, save_rgb_jpeg

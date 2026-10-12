@@ -6,13 +6,12 @@ import json
 import os
 import statistics
 import subprocess
-import sys
 from pathlib import Path
 
 from calibrate_yolo_ensemble import evaluate_locked_full_resolution
 from run_data_v9_grouped_cv import now_iso, sha256
 from run_data_v23_yolo11_fusion_valid import (
-    AUXILIARY_EXPORT, DATASET, FEATURE_MANIFEST, FEATURE_ROOT, PRIMARY_EXPORT, command_export, export_complete,
+    AUXILIARY_EXPORT, DATASET, PRIMARY_EXPORT, command_export, export_complete,
 )
 from run_feature_ablations import write_json_atomic
 

@@ -202,11 +202,11 @@ def main():
     print("\n[3/4] 构建 Data_v3...")
     stats = build_dataset(pairs, splits)
 
-    print(f"\n  数据集统计:")
+    print("\n  数据集统计:")
     for k, v in sorted(stats.items()):
         if not k.startswith('train_from') and not k.startswith('valid_from') and not k.startswith('test_from'):
             print(f"    {k}: {v}")
-    print(f"    来源分布:")
+    print("    来源分布:")
     for k, v in sorted(stats.items()):
         if '_from_' in k:
             print(f"      {k}: {v}")

@@ -252,7 +252,6 @@ def pair_metrics(instances: Sequence[Instance]) -> dict[str, object]:
 
     areas = [instance.area for instance in instances]
     radar = sorted(instance.radius for instance in instances)
-    middle = len(radar) // 2
     result.update(
         {
             "overlap_pairs": overlap_pairs,

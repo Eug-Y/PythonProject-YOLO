@@ -1,6 +1,6 @@
 """根据PPT生成讲解稿+答辩问答 Word文档"""
 from docx import Document
-from docx.shared import Pt, Cm, RGBColor
+from docx.shared import Pt, Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 doc = Document()

@@ -3,7 +3,9 @@
 用法: python test_land_seg.py [图片名或路径]
 示例: python test_land_seg.py DJI_0080
 """
-import os, sys, cv2
+import os
+import sys
+import cv2
 import numpy as np
 import torch
 import torch.nn as nn
@@ -294,7 +296,7 @@ def main():
     gt_masks = load_gt(label_path, rgb.shape[0], rgb.shape[1])
 
     # ---- 推理 ----
-    print(f"  推理中...")
+    print("  推理中...")
     results = infer_one(model, im_5ch, DEVICE)
 
     # ---- 统计 ----

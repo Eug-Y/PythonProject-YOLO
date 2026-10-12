@@ -4,7 +4,10 @@
 2. 所有 bbox 作为 box prompt 发给 SAM2
 3. SAM2 生成精细 mask → 转 YOLO 分割多边形 TXT
 """
-import os, re, sys, time
+import os
+import re
+import sys
+import time
 import cv2
 import numpy as np
 from pathlib import Path
@@ -256,7 +259,7 @@ def main():
     sam2 = load_sam2_model()
     print(f"  SAM2 完成 ({time.time()-t0:.1f}s)")
 
-    print(f"\n  开始标注...")
+    print("\n  开始标注...")
     total_start = time.time()
     ok, fail = 0, 0
 
@@ -325,7 +328,7 @@ def main():
     print(f"\n  {'='*50}")
     print(f"  完成! ok={ok} fail={fail}  总耗时 {total_time/60:.1f}min")
     print(f"  标注文件: {OUT_DIR}")
-    print(f"\n  下一步: 将labels合并到 datasets/Data_v2/train/labels/ 重新训练")
+    print("\n  下一步: 将labels合并到 datasets/Data_v2/train/labels/ 重新训练")
 
 
 if __name__ == "__main__":
