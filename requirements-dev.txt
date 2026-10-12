@@ -1,0 +1,10 @@
+# Development-only tooling. Not required to run, deploy or serve the system --
+# see requirements-deployment.txt for the runtime dependencies.
+#
+#   .\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+#
+# The test suite itself needs nothing beyond this file: it uses only the
+# standard-library unittest framework plus the runtime dependencies.
+
+ruff==0.17.0
+pytest==9.1.1

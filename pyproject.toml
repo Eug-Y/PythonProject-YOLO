@@ -1,0 +1,79 @@
+# Tooling configuration only.
+#
+# This project is a flat collection of runnable scripts, not an installable
+# package: the runners import each other by bare module name (for example
+# `import run_feature_ablations`) and the unit tests import the scripts
+# directly. There is therefore deliberately NO [build-system] and NO [project]
+# table here -- adding one would change how imports and packaging resolve.
+#
+#   .\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+#   .\.venv\Scripts\python.exe -m ruff check .              # lint
+#   .\.venv\Scripts\python.exe -m ruff check --fix .        # apply safe fixes
+#   .\.venv\Scripts\python.exe -m pytest                    # full test suite
+#
+# The canonical, dependency-free test command remains:
+#   .\.venv\Scripts\python.exe -m unittest discover -s tests -p "test_*.py"
+
+[tool.ruff]
+target-version = "py311"
+
+# E501 is not enforced (see [tool.ruff.lint]); this value only documents the
+# width the formatter would use if it were ever adopted.
+line-length = 120
+
+# ruff already honours .gitignore; these are the untracked-but-not-ignored
+# trees (agent metadata, copyright-registration paperwork) kept out of lint.
+extend-exclude = [
+    ".venv",
+    ".dsh",
+    ".dsh-vision-toolkit",
+    ".agents",
+    ".claude",
+    "软著申报",
+    "runs",
+    "reports",
+    "logs",
+    "datasets",
+]
+
+[tool.ruff.lint]
+# Correctness rules only, chosen so that `ruff check .` is green on the
+# existing code base and can therefore act as a real gate:
+#   F   pyflakes   -- unused imports/variables, undefined names (this set already
+#                     caught a genuine `NameError` in train_ca_5ch.py)
+#   E4  imports    -- E401 multiple-imports-on-one-line
+#   E9  syntax     -- syntax errors
+#   W2  whitespace -- trailing whitespace, missing newline at EOF
+#   W6  deprecated -- invalid escape sequences
+#
+# Deliberately NOT enabled:
+#   E501 line-too-long      -- long Chinese comments are normal here
+#   E7xx statement splitting-- compact one-line `a = 1; b = 2` / `if x: y` forms
+#                              are intentional in the runners
+#   any import-sorting rule -- import ORDER is load-bearing in this project:
+#                              `custom_modules` must be imported before custom
+#                              checkpoints are unpickled, so reordering risks
+#                              breaking model loading.
+select = ["F", "E4", "E9", "W2", "W6"]
+
+ignore = [
+    # Load-bearing import placement, not an accident:
+    #   yolo_5ch_data.py   imports Ultralytics *after* its own patching setup
+    #   eval_test_set.py   sectioned lazy import of the metrics helper
+    #   test_web_match.py  debug script importing after sys.path setup
+    # Moving these to the top would change import order and is not worth the risk.
+    "E402",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Two trailing spaces inside a generated Markdown line are an intentional hard
+# line break. The W291 autofix would silently change the emitted report text.
+"build_data_v19_final_report.py" = ["W291"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+# The tests import the root-level scripts by bare module name, so the project
+# root must be importable when pytest is invoked as a console script.
+pythonpath = ["."]
+addopts = "-q"
