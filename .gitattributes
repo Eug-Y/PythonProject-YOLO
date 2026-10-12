@@ -1,0 +1,34 @@
+# Line-ending and binary policy.
+#
+# This repository has core.autocrlf=true (git warns "LF will be replaced by
+# CRLF the next time Git touches it" on every add), while .editorconfig and
+# every file in the working tree use LF, and the Windows launchers must stay
+# CRLF. Pinning the policy here makes the result identical on every machine
+# regardless of a developer's autocrlf setting.
+
+# Text files: normalise to LF in the repository and check out as LF.
+* text=auto eol=lf
+
+# The Windows launchers are intentionally GBK-encoded with CRLF endings; they
+# pin the console to code page 936 so their Chinese prompts stay readable.
+# Keep them CRLF on checkout and never convert them to UTF-8.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary artefacts: never convert, never diff as text.
+*.pt     binary
+*.pth    binary
+*.onnx   binary
+*.engine binary
+*.exe    binary
+*.dll    binary
+*.zip    binary
+*.npy    binary
+*.npz    binary
+*.tif    binary
+*.tiff   binary
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.docx   binary
+*.pdf    binary
